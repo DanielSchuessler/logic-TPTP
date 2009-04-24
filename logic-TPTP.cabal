@@ -1,0 +1,38 @@
+name: logic-TPTP    
+version: 0.1
+cabal-version: >= 1.6
+build-type: Custom
+license: GPL
+license-file: LICENSE
+maintainer: Daniel Schüssler <daniels@community.haskell.org>
+stability: Alpha
+bug-reports: mailto:daniels@community.haskell.org 
+synopsis: Parse TPTP files
+description: 
+ See http://www.cs.miami.edu/~tptp/
+ 
+ Currently the new "thf" formula type is not implemented.
+ 
+category: Codec,Logic
+author: Daniel Schüssler
+cabal-version: >= 1.6
+
+source-repository head
+ type: darcs
+ location: http://code.haskell.org/~daniels/logic-TPTP
+ 
+
+Library
+ ghc-options:     -O2
+ 
+ build-depends:    base >=4 ,array, syb, containers, haskell98
+                   , ansi-wl-pprint                 
+ 
+ exposed-modules:   Codec.TPTP.Import
+                   ,Codec.TPTP.Base
+                   ,Codec.TPTP
+                   ,Codec.TPTP.Pretty
+ 
+ other-modules:
+                    Lexer     
+                  , Parser
