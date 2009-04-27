@@ -1,0 +1,96 @@
+
+fof(definition_def,definition,! [X2] : (def(X2) <=> (X2 != bottom))).
+fof(definition_equiv,definition,! [X0,X1] : (equiv(X0,X1) <=> (def(X0) & (X0 = X1)))).
+
+fof(iddom_def,axiom,! [X3] : (def(X3) <=> def(iddom(X3)))).
+fof(idcod_def,axiom,! [X5] : (def(X5) <=> def(idcod(X5)))).
+
+fof(idfinal_def,axiom,def(idfinal)).
+fof(idinitial_def,axiom,def(idinitial)).
+
+fof(compose_def,axiom,! [X7,X8] : ((def(X7) & def(X8)) <= def(compose(X7,X8)))).
+fof(pb1_def,axiom,! [X9,X10] : ((def(X9) & def(X10)) <= def(pb1(X9,X10)))).
+fof(pb2_def,axiom,! [X11,X12] : ((def(X11) & def(X12)) <= def(pb2(X11,X12)))).
+fof(sos,axiom,! [X13,X14,X15,X16] : ((def(X13) & (def(X14) & (def(X15) & def(X16)))) <= def(pbmed(X13,X14,X15,X16)))).
+fof(sos,axiom,! [X17,X18] : ((def(X17) & def(X18)) <= def(po1(X17,X18)))).
+fof(sos,axiom,! [X19,X20] : ((def(X19) & def(X20)) <= def(po2(X19,X20)))).
+fof(sos,axiom,! [X21,X22,X23,X24] : ((def(X21) & (def(X22) & (def(X23) & def(X24)))) <= def(pomed(X21,X22,X23,X24)))).
+fof(sos,axiom,! [X25] : (def(X25) <= def(inv(X25)))).
+
+% category axioms
+fof(identity_l,axiom,![A]:compose(A,iddom(A)) = A,description('identity (right)')).
+fof(identity_r,axiom,![A]:compose(idcod(A),A) = A,description('identity (left)')).
+fof(associativity,axiom
+
+        ,! [X26,X27,X28] : 
+        
+        (def(compose(compose(X26,X27)
+                    ,X28)) 
+        
+          => 
+             equiv(     compose(compose(X26,X27)
+                               ,X28),
+                        compose(X26
+                               ,compose(X27,X28))))
+        
+
+        , description('associativity')).
+
+
+fof(sos,axiom,! [X29,X30,X31] : (def(compose(compose(X29,X30),X31)) <=> def(compose(X29,compose(X30,X31)))), description('a left-associated composition term is defined iff the corresponding right-associated composition term is defined')).
+
+fof(sos,axiom,! [X32,X33] : (def(compose(X32,X33)) => equiv(iddom(compose(X32,X33)),iddom(X33))), description('dom of composition')).
+fof(sos,axiom,! [X34,X35] : (def(compose(X34,X35)) => equiv(idcod(compose(X34,X35)),idcod(X35))), description('cod of composition')).
+fof(sos,axiom,! [X36,X37] : (def(compose(X36,X37)) <=> equiv(idcod(X37),iddom(X36))), description('compose(g,f) is defined iff the id on fs codomain is the id on gs domain')).
+
+% dom/cod of identities
+fof(sos,axiom,! [A] : (iddom(iddom(A)) = iddom(A))).
+fof(sos,axiom,! [A] : (idcod(iddom(A)) = iddom(A))).
+fof(sos,axiom,! [A] : (iddom(idcod(A)) = idcod(A))).
+fof(sos,axiom,! [A] : (idcod(idcod(A)) = idcod(A))).
+
+fof(sos,axiom,! [X38,X39] : (def(compose(iddom(X38),iddom(X39))) => equiv(iddom(X38),iddom(X39)))).
+fof(sos,axiom,! [X40,X41] : (def(compose(iddom(X40),idcod(X41))) => equiv(iddom(X40),idcod(X41)))).
+fof(sos,axiom,! [X42,X43] : (def(compose(idcod(X42),iddom(X43))) => equiv(idcod(X42),iddom(X43)))).
+fof(sos,axiom,! [X44,X45] : (def(compose(idcod(X44),idcod(X45))) => equiv(idcod(X44),idcod(X45)))).
+
+fof(sos,axiom,iddom(idfinal) = idfinal).
+fof(sos,axiom,idcod(idfinal) = idfinal).
+fof(sos,axiom,iddom(idinitial) = idinitial).
+fof(sos,axiom,idcod(idinitial) = idinitial).
+
+% properties of pullback and pushout
+
+% pullbacks
+fof(sos,axiom,! [X46,X47] : (def(pb1(X46,X47)) <=> equiv(idcod(X46),idcod(X47)))).
+fof(sos,axiom,! [X48,X49] : (def(pb1(X48,X49)) <=> def(pb2(X48,X49)))).
+fof(sos,axiom,! [X50,X51] : (def(pb1(X50,X51)) => (def(compose(X50,pb1(X50,X51))) & (def(compose(X51,pb2(X50,X51))) & equiv(iddom(pb1(X50,X51)),iddom(pb2(X50,X51))))))).
+fof(sos,axiom,! [X52,X53,X54,X55] : (def(pbmed(X52,X53,X54,X55)) <=> equiv(compose(X52,X54),compose(X53,X55)))).
+
+fof(sos,axiom,! [X56,X57,X58,X59] : (def(pbmed(X56,X57,X58,X59)) => (equiv(X58,compose(pb1(X56,X57),pbmed(X56,X57,X58,X59))) & equiv(X59,compose(pb2(X56,X57),pbmed(X56,X57,X58,X59))))), description('universal property of pullback/existence')).
+fof(sos,axiom,! [X60,X61,X62,X63] : ! [X64] : (def(pbmed(X60,X61,X62,X63)) => ((equiv(X62,compose(pb1(X60,X61),X64)) & equiv(X63,compose(pb2(X60,X61),X64))) => equiv(X64,pbmed(X60,X61,X62,X63)))), description('universal property of pullback/uniqueness')).
+
+
+% pushouts
+fof(sos,axiom,! [X65,X66] : (def(po1(X65,X66)) <=> equiv(iddom(X65),iddom(X66)))).
+fof(sos,axiom,! [X67,X68] : (def(po1(X67,X68)) <=> def(po2(X67,X68)))).
+fof(sos,axiom,! [X69,X70] : (def(po1(X69,X70)) => (def(compose(po1(X69,X70),X69)) & (def(compose(po2(X69,X70),X70)) & equiv(idcod(po1(X69,X70)),idcod(po2(X69,X70))))))).
+fof(sos,axiom,! [X71,X72,X73,X74] : (def(pomed(X71,X72,X73,X74)) <=> equiv(compose(X73,X71),compose(X74,X72)))).
+
+fof(sos,axiom,! [X75,X76,X77,X78] : (def(pomed(X75,X76,X77,X78)) => (equiv(X77,compose(pomed(X75,X76,X77,X78),po1(X75,X76))) & equiv(X78,compose(pomed(X75,X76,X77,X78),po2(X75,X76))))), description('universal property of pushout/existence')).
+fof(sos,axiom,! [X79,X80,X81,X82,X83] : (def(pomed(X79,X80,X81,X82)) => ((equiv(X81,compose(X83,po1(X79,X80))) & equiv(X82,compose(X83,po2(X79,X80)))) => equiv(X83,pomed(X79,X80,X81,X82)))), description('universal property of pushout/uniqueness')).
+
+fof(sos,definition,! [X84] : (is_id(X84) <=> equiv(X84,iddom(X84))), description('def. of is_id')).
+
+% epis and monos
+fof(sos,definition,! [X85] : (mono(X85) <=> (def(X85) & ! [X86,X87] : (equiv(compose(X85,X86),compose(X85,X87)) => X86 = X87)))).
+fof(sos,definition,! [X88] : (epi(X88) <=> (def(X88) & ! [X89,X90] : (equiv(compose(X89,X88),compose(X90,X88)) => X89 = X90)))).
+
+fof(sos,axiom,! [X91,X92] : ((is_id(compose(X91,X92)) & is_id(compose(X92,X91))) => equiv(inv(X91),X92))).
+fof(sos,axiom,! [X93,X94] : (equiv(inv(X93),X94) => (is_id(compose(X93,X94)) & is_id(compose(X94,X93))))).
+
+
+
+
+
+% fof(goals,conjecture,! [X95] : (def(inv(X95)) => X95 = inv(inv(X95)))).

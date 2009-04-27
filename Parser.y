@@ -18,7 +18,7 @@ import System.IO.Unsafe
 %error { 
           
           ((\xs -> case xs of
-                    xs -> error ("Parse error, pos: "++show (take 10 xs))))
+                    xs -> error ("Parse error, pos: "++show (take 25 xs))))
        }
 
 
@@ -133,10 +133,10 @@ more_and_formula  : {[]} | ampersand unitary_formula more_and_formula
                    { $2 : $3 }
                    
 unitary_formula  :: {Formula}
-unitary_formula  : quantified_formula  {$1}
-                  | unary_formula  {$1}
-                  | atomic_formula  {$1}
-                  |  lp fof_formula  rp {$2}
+unitary_formula  :  quantified_formula  {$1}
+                  | unary_formula       {$1}
+                  | atomic_formula      {$1}
+                  | lp fof_formula  rp  {$2}
                    
 quantified_formula  :: {Formula}
 quantified_formula  : quantifier  lbra variable_list  rbra colon unitary_formula 
@@ -149,11 +149,19 @@ variable_list  : variable  { [$1] }
 unary_formula  :: {Formula}
 unary_formula  : unary_connective  unitary_formula  { $1 $2 }
                 | fol_infix_unary  { $1 }
-                
+   
+
+
+
+-- cnf_formula :: {Formula}
+-- cnf_formula : assoc_binary {$1}
+--             | lp assoc_binary rp {$2}
+
 cnf_formula  :: {Formula}
 cnf_formula  :  lp disjunction  rp  { $2 }
               | disjunction  { $1 }
-              
+
+                
 disjunction  :: {Formula}
 disjunction  : literal  more_disjunction 
               { foldl (.|.) $1 $2 }
@@ -193,24 +201,24 @@ unary_connective  : tilde { (.~.) }
 -- system_type  :== atomic_system_word 
 
 atomic_formula  :: {Formula} 
-atomic_formula  : plain_atomic_formula  {$1}
+atomic_formula  :  plain_atomic_formula    {$1}
                  | defined_atomic_formula  {$1}
-                 | system_atomic_formula  {$1}
+                 | system_atomic_formula   {$1}
                  
 
 plain_atomic_formula  :: {Formula}
-plain_atomic_formula  : plain_term  {fromTerm $1}
+plain_atomic_formula  : plain_term  {let FApp x args = $1 in PApp x args}
 
 -- plain_atomic_formula  :== proposition  | predicate  lp arguments  rp 
 -- proposition  :== predicate 
 -- predicate  :== atomic_word 
 
 defined_atomic_formula  :: {Formula}
-defined_atomic_formula  : defined_plain_formula  {$1} 
+defined_atomic_formula  :  defined_plain_formula  {$1} 
                          | defined_infix_formula  {$1}
                          
 defined_plain_formula  :: {Formula}
-defined_plain_formula  : defined_plain_term  {fromTerm $1}
+defined_plain_formula  : defined_plain_term  {let FApp x args = $1 in PApp x args}
                         
 --defined_plain_formula  :== defined_prop  | defined_pred  lp arguments  rp 
 --defined_prop  :== atomic_defined_word 
@@ -235,8 +243,8 @@ system_atomic_formula  :: {Formula}
 system_atomic_formula  : system_term  {fromTerm $1}
 
 term  :: {Term}                        
-term  : function_term  {$1}
-       | variable  {var $1}
+term  :  function_term  {$1}
+       | variable       {var $1}
        
 function_term  :: {Term}                        
 function_term  : plain_term {$1} 
@@ -244,7 +252,7 @@ function_term  : plain_term {$1}
                 | system_term {$1}
 
 plain_term  :: {Term}                        
-plain_term  : constant  {fApp $1 []}
+plain_term  :  constant                  {fApp $1 []}
              | functor  lp arguments  rp {fApp $1 $3}
               
 constant  :: {String}
@@ -348,32 +356,29 @@ name_list  : name  {[$1]}
             | name  comma name_list  { $1 : $3 }
 
               
-general_term  :: {[GeneralData]}
-general_term  : general_data  {[$1]} 
-               | general_data  colon general_term  {$1 : $3} 
--- this adds ambiguity, only uncomment if it's actually necessary
---               | {[]}
-               
--- general_list 
+general_term  :: {GTerm}
+general_term  :  general_data  {GTerm $1} 
+               | general_data colon general_term  {ColonSep $1 $3} 
+               | general_list {GList $1} 
 
-general_data  :: {GeneralData}
-general_data  : atomic_word  { GWord $1 } 
+general_data  :: {GData}
+general_data  :  atomic_word  { GWord $1 } 
                | atomic_word  lp general_terms  rp { GApp $1 $3 }  
                | variable  { GVar $1 }
                | number  { GNumber $1 }
                | distinct_object { GDistinctObject $1 }
                | formula_data  { $1 }
                
-formula_data :: {GeneralData}
+formula_data :: {GData}
 formula_data  : dollar_word lp fof_formula  rp { error "formula_data not implemented" }
-               | dollar_word lp cnf_formula  rp { error "formula_data not implemented" }
+            --   | dollar_word lp cnf_formula  rp { error "formula_data not implemented" }
                 
-general_list  :: {[GeneralTerm]}
+general_list  :: {[GTerm]}
 general_list  : lbra rbra {[]}
                | lbra general_terms  rbra {$2}
                
-general_terms  :: {[GeneralTerm]}
-general_terms  : general_term  {[$1]} 
+general_terms  :: {[GTerm]}
+general_terms  :  general_term  {[$1]} 
                 | general_term  comma general_terms  {$1 : $3}
 
 name  :: {String}

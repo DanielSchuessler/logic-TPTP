@@ -22,7 +22,7 @@ $viewable_char = [$printable_char\n]
 
 @decimal_natural = [0]| $non_zero_numeric $numeric* 
 @signed_decimal = $sign @decimal_natural
-@decimal = @signed_decimal @decimal_natural 
+@decimal = @signed_decimal | @decimal_natural 
 @dot_decimal = "." $numeric $numeric*
 @decimal_fraction = @decimal @dot_decimal
 @decimal_exponent = @decimal | @decimal_fraction $exponent @decimal
@@ -36,7 +36,8 @@ tokens :-
   "]"                                          { withPos $ const Rbrack }
   ")"                                          { withPos $ const RP }
   ","                                          { withPos $ const Comma }
-  [\<]?[\=\~][\>]? | [\&\|\!\:\=]              { withPos $ Oper }
+  "!="|"="|"<=>"|"<="|"=>"|"<~>"|"&"|"|"
+      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos $ Oper }
   "."                                          { withPos $ const Dot }
   ("%"|"#")$printable_char*                    { withPos $ CommentToken } -- comment line
   "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken } -- comment block 

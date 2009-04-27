@@ -1,132 +1,219 @@
-{-# OPTIONS -XRecordWildCards -XCPP -XDeriveDataTypeable -XNoMonomorphismRestriction -XStandaloneDeriving -XFlexibleInstances -XFlexibleContexts -XGeneralizedNewtypeDeriving #-}
+{-# OPTIONS -XRecordWildCards -XCPP -XDeriveDataTypeable -XNoMonomorphismRestriction -XStandaloneDeriving -XFlexibleInstances -XGeneralizedNewtypeDeriving -fglasgow-exts #-}
+
+{-# OPTIONS -Wall -fno-warn-orphans #-}
 
 module Codec.TPTP.Pretty where
 
 import Codec.TPTP.Base
 import Text.PrettyPrint.ANSI.Leijen
+import Data.Data
 
-oper = red . text
+oper :: String -> Doc
+oper = dullyellow . text
+prettyvar :: String -> Doc
 prettyvar = blue . text
+psym :: String -> Doc
 psym = green . text
+fsym :: String -> Doc
 fsym = yellow . text
-arguments = fillSep . punctuate comma . fmap pretty
-            
-data WithPrec a = Prec !String a
 
-needsParen inner outer =
+wtext :: String -> Doc
+wtext = white.text
+       
+prettyargs :: forall a. (Pretty a) => [a] -> Doc
+--prettyargs = encloseSep (wtext "(") (wtext ")") (wtext ",") . fmap pretty
+prettyargs = tupled . fmap pretty
+-- prettyargs [] = white $ text "()"
+-- prettyargs (x:xs) =
+--     let pxs = fmap ((white (text ",") <+>) . pretty) xs in 
+
+--     align (fillSep $ [    white (text "(") <+> pretty x ] 
+--                     ++ pxs 
+--                     ++ [ white (text ")") ] ) 
+                        
+            
+-- | Carries information about the enclosing operation (for the purpose of printing stuff without parentheses if possible).
+data WithEnclosing a = WithEnclosing Enclosing a
+                     
+data Enclosing = EnclBinOp BinOp | EnclQuant | EnclNeg | EnclInfixPred InfixPred | EnclNothing
+               deriving (Eq,Ord,Show,Data,Typeable,Read)
+                        
+unaryEncl :: Enclosing -> Bool
+unaryEncl EnclNeg = True
+unaryEncl EnclQuant = True
+unaryEncl _ = False
+
+needsParens :: Enclosing -> Enclosing -> Bool
+needsParens inner outer =
     case (inner,outer) of
       -- special handling for associative ops
-      ("∧","∧") -> False
-      ("∨","∨") -> False
-      ("XOR","XOR") -> False
+      ((EnclBinOp (:&:)),(EnclBinOp (:&:))) -> False
+      ((EnclBinOp (:|:)),(EnclBinOp (:|:))) -> False
+      ((EnclBinOp (:<~>:)),(EnclBinOp (:<~>:))) -> False
       
       -- chains of quantifiers/negation don't need parentheses
-      otherwise 
-          | let u = ["∀","∃","¬"] 
-            in inner `elem` u && outer `elem` u 
-
+      _ 
+          | unaryEncl inner, unaryEncl outer 
                 -> False
                   
-      otherwise -> prec inner <= prec outer
+      _ -> prec inner <= prec outer
   where
+    prec :: Enclosing -> Int
     prec x = case x of 
-               "=" -> 60
-               "≠" -> 60
-               "∀" -> 50
-               "∃" -> 50
-               "¬" -> 50
-               "∧" -> 40
-               "NAND" -> 40
-               "∨" -> 30
-               "NOR" -> 30
-               "⇔" -> 20
-               "⇐" -> 20
-               "⇒" -> 20
-               "" -> (-1000) -- if there's no enclosing operation, we don't need parentheses
+               (EnclInfixPred _) -> 60
+               (EnclNeg) -> 50
+               (EnclQuant) -> 50
+               (EnclBinOp (:&:)) -> 40
+               (EnclBinOp (:~&:)) -> 40
+               (EnclBinOp (:|:)) -> 30
+               (EnclBinOp (:~|:)) -> 30
+               (EnclBinOp (:=>:)) -> 20
+               (EnclBinOp (:<=:)) -> 20
+               (EnclBinOp (:<=>:)) -> 20
+               (EnclBinOp (:<~>:)) -> 20
+               EnclNothing -> (-1000) -- if there's no enclosing operation, we don't need parentheses
 
 
+maybeParens :: Enclosing -> Enclosing -> Doc -> Doc
+maybeParens inner outer | needsParens inner outer = parens
+maybeParens _ _ = id 
                    
 instance Pretty TPTP_Input where
     pretty AFormula{..} 
-        = (red.text) "AFormula"
+        = (text) "Formula " <+> (dullwhite.text) "name:"
           </>
           vsep
           [
-            text name
-          ,(underline.text.unrole) role
+            (red.text) name <+> dullwhite (text "role:") <+> (magenta.text.unrole) role
           , pretty formula
-          ,(text.show) sourceInfo
-          ,(text.show) usefulInfo
+          , pretty sourceInfo
+          , pretty usefulInfo
+          ,empty
           ]
                            
     pretty (Comment str)
         = magenta . string $ str
                            
-    prettyList = foldr (\x xs -> pretty x <$> empty <$> xs) empty 
+    prettyList = foldr (\x xs -> pretty x <$> xs) empty 
                
+instance Pretty Quant where
+    pretty All = oper "∀"
+    pretty Exists = oper "∃"
                        
-                       
-instance (Pretty (WithPrec t), Pretty (WithPrec f)) => Pretty ((WithPrec (Formula0 t f))) where
-    pretty (Prec enclosing formu) = 
-     let 
-         quant str vars f = 
-             (if needsParen str enclosing then parens else id)
-             (oper str <+> brackets (hsep (fmap prettyvar vars)) <> dot </> pretty (Prec str f))
-                          
-         binop f1 str f2 = 
-             (if needsParen str enclosing then parens else id)
-             (pretty (Prec str f1) </> oper str </> pretty (Prec str f2))
-                           
-
-     in
+instance (Pretty (WithEnclosing t), Pretty (WithEnclosing f)) => Pretty ((WithEnclosing (Formula0 t f))) where
+    pretty (WithEnclosing enclosing formu) = 
+        let 
+            newEnclosing =
              case formu of
-               All vars f    -> quant "∀" vars f
-               Exists vars f -> quant "∃" vars f
-               PApp p args -> psym p </> parens (arguments (fmap (Prec "") args))
-               FromTerm t -> text "fromTerm" </> parens (pretty (Prec "" t))
-               (:~:) f -> (if needsParen "¬" enclosing then parens else id) (oper "¬" </> pretty (Prec "¬" f))
+               Quant _ _ _ -> EnclQuant 
+               PredApp _ _ -> EnclNothing -- arguments are comma-seperated, so they don't need any parens
+               FromTerm _ -> EnclNothing
+               (:~:) _ -> EnclNeg
+               BinOp _ op _ -> EnclBinOp op
+               InfixPred _ op _ -> EnclInfixPred op
+                                  
+            wne = WithEnclosing newEnclosing
+                                    
+        in
+          maybeParens newEnclosing enclosing $
           
-               f1 :<=>: f2 -> binop f1 "⇔" f2
-               f1 :=>: f2 -> binop f1 "⇒" f2
-               f1 :<=: f2 -> binop f1 "⇐" f2
-               f1 :&: f2 -> binop f1 "∧" f2
-               f1 :|: f2 -> binop f1 "∨" f2
-               f1 :~&: f2 -> binop f1 "NAND" f2
-               f1 :~|: f2 -> binop f1 "NOR" f2
-               f1 :<~>: f2 -> binop f1 "XOR" f2
-               t1 :=: t2 -> binop t1 "=" t2
-               t1 :!=: t2 -> binop t1 "≠" t2
+          case formu of
+
+            Quant q vars f ->
+               pretty q 
+               <+> brackets (hsep (punctuate comma (fmap prettyvar vars))) 
+               <> dot 
+               </> pretty (wne f)
+
+            (:~:) f -> oper "¬" <+> pretty (wne f)
+                      
+            PredApp p [] -> psym p
+            PredApp p args -> psym p <> prettyargs (fmap wne args)
+
+            FromTerm t -> text "fromTerm" <> parens (pretty (wne t))
+            
+            BinOp f1 op f2 ->
+                align $ sep [indent 0 $ pretty (wne f1), pretty op, indent 0 $ pretty (wne f2)]
+             
+            InfixPred f1 op f2 ->
+                align $ sep [indent 0 $ pretty (wne f1), pretty op, indent 0 $ pretty (wne f2)]
+                        
+instance Pretty BinOp where
+    pretty x = case x of
+        (:<=>:) -> oper "⇔"
+        (:=>:)  -> oper "⇒"
+        (:<=:)  -> oper "⇐"
+        (:&:)   -> oper "∧"
+        (:|:)   -> oper "∨"
+        (:~&:)  -> oper "NAND"
+        (:~|:)  -> oper "NOR"
+        (:<~>:) -> oper "XOR"
+                             
+instance Pretty InfixPred where
+    pretty x = case x of
+        (:=:)   -> oper "="
+        (:!=:)  -> oper "≠"
                                 
-instance (Pretty (WithPrec t)) => Pretty (WithPrec (Term0 t)) where
-    pretty (Prec enclosing x) = 
+instance (Pretty (WithEnclosing t)) => Pretty (WithEnclosing (Term0 t)) where
+    pretty (WithEnclosing _ x) = 
         case x of 
           Var s -> prettyvar s
           NumberLitTerm d -> text (show d)
-          DistinctObjectTerm s -> text s
-          FApp f args -> fsym f <> parens(arguments (fmap (Prec "") args))
+          DistinctObjectTerm s -> cyan (dquotes (text s))
+          FunApp f [] -> fsym f
+          FunApp f args -> fsym f <> prettyargs (fmap (WithEnclosing EnclNothing) args)
                         
                         
 
 instance Pretty (Formula0 Term Formula) where
-    pretty = pretty . Prec "" . FF
+    pretty = pretty . WithEnclosing EnclNothing . FF
                    
 instance Pretty (Term0 Term) where
-    pretty = pretty . Prec "" . TT
+    pretty = pretty . WithEnclosing EnclNothing . TT
              
-instance Pretty (WithPrec Formula) where
-    pretty (Prec x (FF y)) = pretty (Prec x y) 
+instance Pretty (WithEnclosing Formula) where
+    pretty (WithEnclosing x (FF y)) = pretty (WithEnclosing x y) 
                              
-instance Pretty (WithPrec Term) where
-    pretty (Prec x (TT y)) = pretty (Prec x y) 
+instance Pretty (WithEnclosing Term) where
+    pretty (WithEnclosing x (TT y)) = pretty (WithEnclosing x y) 
                              
 deriving instance Pretty Formula
 deriving instance Pretty Term
                      
 -- instance (Pretty f, Pretty t) => Pretty (Formula0 t f) where
---     pretty = pretty . Prec ""
+--     pretty = pretty . WithEnclosing ""
                    
 -- instance (Pretty t) => Pretty (Term0 t) where
---     pretty = pretty . Prec ""
+--     pretty = pretty . WithEnclosing ""
                        
 prettySimple :: Pretty a => a -> String
 prettySimple x = displayS (renderPretty 0.9 80 (pretty x)) ""
+
+instance Pretty SourceInfo where
+    pretty NoSourceInfo = dullwhite . text $ "NoSourceInfo"
+    pretty (SourceInfo x) = dullwhite (text "SourceInfo: ") <+> pretty x
+
+instance Pretty UsefulInfo where
+    pretty NoUsefulInfo = dullwhite . text $ "NoUsefulInfo"
+    pretty (UsefulInfo x) = dullwhite (text "UsefulInfo: ") <+> pretty x
+
+
+
+instance Pretty GData where
+    pretty (GWord x) = pretty x
+    pretty (GNumber x) = pretty x
+    pretty (GDistinctObject x) = cyan (dquotes (text x))
+    pretty (GApp x []) = fsym x
+    pretty (GApp x args) = fsym x <+> prettyargs args
+    pretty (GFormulaData) = dullwhite . text $ "GFormulaData (not implemented)"
+    pretty (GVar x) = prettyvar x
+
+
+instance Pretty GTerm where
+    pretty (GTerm x) = pretty x
+    pretty (ColonSep x y) = pretty x <+> oper ":" <+> pretty y
+    pretty (GList xs) = let f = oper
+                        in
+                          f "[" <+> (fillSep . punctuate comma . fmap pretty) xs <+> f "]"
+                                 
+                                 
