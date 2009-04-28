@@ -14,7 +14,9 @@ import Data.Char
 import Control.Monad
 import Debug.Trace
 import Codec.TPTP.QuickCheck
-
+import Data.String
+import Data.Monoid hiding(All)
+    
 -- * Basic undecorated formulae and terms
                    
 -- | Basic (undecorated) first-order formulae                   
@@ -56,15 +58,12 @@ for_all vars x = FF $ Quant All vars x
 exists :: [String] -> Formula -> Formula
 exists vars x = FF $ Quant Exists vars x
                 
-pApp :: String -> [Term] -> Formula
+pApp :: AtomicWord -> [Term] -> Formula
 pApp x args = FF $ PredApp x args
               
-fromTerm :: Term -> Formula
-fromTerm = FF . FromTerm
-                
 var :: String -> Term
 var = TT . Var
-fApp :: String -> [Term] -> Term
+fApp :: AtomicWord -> [Term] -> Term
 fApp x args = TT $ FunApp x args
 numberLitTerm :: Double -> Term
 numberLitTerm = TT . NumberLitTerm
@@ -82,10 +81,9 @@ infixl 5  .=. ,  .!=.
 data Formula0 term formula = 
               BinOp formula BinOp formula -- ^ Binary connective application
             | InfixPred term InfixPred term -- ^ Infix predicate application (equalities, inequalities)
-            | PredApp String [term] -- ^ Predicate application
+            | PredApp AtomicWord [term] -- ^ Predicate application
             | Quant Quant [String] formula -- ^ Quantified formula
             | (:~:) formula -- ^ Negation
-            | FromTerm term -- ^ Don't ask me how this makes sense, but it is required for the /plain_atomic_formula/ and /defined_plain_formula/ grammar rules
               deriving (Eq,Ord,Show,Read,Data,Typeable)
                        
                        
@@ -94,7 +92,7 @@ data Term0 term =
             Var String -- ^ Variable
           | NumberLitTerm Double -- ^ Number literal
           | DistinctObjectTerm String -- ^ Double-quoted item
-          | FunApp String [term] -- ^ Function symbol application (constants are nullary functions) 
+          | FunApp AtomicWord [term] -- ^ Function symbol application (constants are nullary functions) 
             deriving (Eq,Ord,Show,Read,Data,Typeable)
                      
 -- | Binary formula connectives 
@@ -122,17 +120,18 @@ data Quant = All | Exists
                      
 -- * Formula Metadata
     
--- | A line of a TPTP file: Either an annotated formula or a comment
+-- | A line of a TPTP file: Annotated formula, comment or include statement.
 data TPTP_Input = 
     -- | Annotated formulae
     AFormula {
-      name :: String 
+      name :: AtomicWord 
     , role :: Role 
     , formula :: Formula 
     , sourceInfo :: SourceInfo 
     , usefulInfo :: UsefulInfo
     }    
     | Comment String
+    | Include FilePath [AtomicWord]
 
     deriving (Eq,Ord,Show,Read,Data,Typeable)
              
@@ -153,12 +152,12 @@ data Role = Role { unrole :: String }
 
 
 -- | Metadata (the /general_data/ rule in TPTP's grammar)
-data GData = GWord String
-                 | GApp String [GTerm]
+data GData = GWord AtomicWord
+                 | GApp AtomicWord [GTerm]
                  | GVar String
                  | GNumber Double
                  | GDistinctObject String
-                 | GFormulaData 
+                 | GFormulaData String Formula 
                    deriving (Eq,Ord,Show,Read,Data,Typeable)
         
 -- | Metadata (the /general_term/ rule in TPTP's grammar)
@@ -206,23 +205,6 @@ free_vars0 x = case cast x :: Maybe Formula of
                     Just (TT t)       -> unions (gmapQ free_vars0 t)
                     otherwise    -> S.empty
                                    
--- * Misc
-
--- | For one reason or another, the TPTP grammar is such that predicate symbol applications are currently parsed as @fromTerm /<function symbol application>/@ instead. This function translates things back to predicate symbol application.
-recover_predsyms :: Formula -> Formula
-recover_predsyms = go
-
-    where
-      go :: GenericT
-      go = everywhere (mkT go')
-             
-      go' :: Formula0 Term Formula -> Formula0 Term Formula
-      go' x = case x of
-            FromTerm (TT (FunApp sym args)) -> PredApp sym args
-            otherwise -> x
-                        
-                        
-
                                    
 
 
@@ -231,19 +213,24 @@ recover_predsyms = go
 --- have this in this module to avoid orphan instances
 
 instance Arbitrary TPTP_Input
-    where arbitrary = do x <- choose (0 :: Int, 1)
-                         case x of
-                             0 -> do 
-                                  x1 <- arbLowerWord
-                                  x2 <- arbitrary
-                                  x3 <- arbitrary
-                                  x4 <- arbitrary
-                                  x5 <- arbitrary
-                                  return (AFormula x1 x2 x3 x4 x5)
+    where arbitrary = frequency [(10,       
+                                    do 
+                                      x1 <- AtomicWord <$> arbLowerWord
+                                      x2 <- arbitrary
+                                      x3 <- arbitrary
+                                      x4 <- arbitrary
+                                      x5 <- arbitrary
+                                      return (AFormula x1 x2 x3 x4 x5))
                                          
-                             1 -> do 
-                                  x1 <- sized (\n -> resize (3*n) arbPrintable)
-                                  return (Comment ("% "++x1))
+                                  , (1,
+                                    do 
+                                      x1 <- arbPrintable
+                                      return (Comment ("% "++x1))
+                                  )
+
+                                  , (1, Include `fmap` arbLowerWord `ap` 
+                                         listOf arbitrary)
+                                ]
 
 instance Arbitrary Formula
     where arbitrary = fmap FF arbitrary
@@ -276,11 +263,11 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Formula0 a b)
     where arbitrary = sized (\n -> TRACE("arbitrary/Formula0") go n)
 
            where
-            go 0 = FromTerm <$> arbitrary
+            go 0 = flip PredApp [] `fmap` arbitrary
                    
             go i =  
                    do 
-                     x <- choose (0 :: Int, 5)
+                     x <- choose (0 :: Int, 4)
                      case x of
                              0 -> do 
                                   ileft <- choose (0,i-1)
@@ -296,7 +283,7 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Formula0 a b)
                                   return (InfixPred x1 x2 x3)
                                          
                              2 -> do 
-                                  x1 <- arbLowerWord
+                                  x1 <- arbitrary
                                   x2 <- argsFreq vector
                                   return (PredApp x1 x2)
                                             
@@ -309,11 +296,7 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Formula0 a b)
                              4 -> do 
                                   x1 <- resize (i-1) arbitrary
                                   return ((:~:) x1)
-                                            
-                             5 -> do 
-                                  x1 <- arbitrary
-                                  return (FromTerm x1)
-
+                                          
 instance Arbitrary BinOp
     where arbitrary = elements
                      
@@ -338,7 +321,7 @@ instance Arbitrary a => Arbitrary (Term0 a)
            where
 
 
-            go 0 = frequency [ (2,Var <$> arbVar), (1,FunApp `fmap` arbLowerWord `ap` return[] ) ]
+            go 0 = frequency [ (2,Var <$> arbVar), (1,FunApp `fmap` arbitrary `ap` return[] ) ]
 
             go i = oneof [
                              do 
@@ -353,7 +336,7 @@ instance Arbitrary a => Arbitrary (Term0 a)
                               return (DistinctObjectTerm x1)
                                      
                            , do 
-                              x1 <- arbLowerWord
+                              x1 <- arbitrary
                               args <- argsFreq 
                                 (\nargs -> do
                                    parti <- arbPartition nargs (i-1)
@@ -367,14 +350,14 @@ instance Arbitrary GData
     where arbitrary = sized go
 
                   where
-                       go 0 = oneof [ fmap GWord arbLowerWord
+                       go 0 = oneof [ fmap GWord arbitrary
                                     , fmap GVar arbVar
                                     ]
                     
                        go i = 
                            oneof 
                            [
-                            GWord <$> arbLowerWord
+                            GWord <$> arbitrary
                                             
                            ,do
                               x1 <- arbLowerWord
@@ -382,15 +365,15 @@ instance Arbitrary GData
                                          (\nargs -> do
                                             parti <- arbPartition nargs (i-1)
                                             mapM (flip resize arbitrary) parti
-                                         )
+                                         ) `suchThat` ((/=) [])
                                           
-                              return (GApp x1 args)
+                              return (GApp (AtomicWord x1) args)
                                      
                            ,GVar <$> arbVar
                            ,arbNum GNumber 
                                  
                            ,GDistinctObject <$> arbPrintable
-                          -- ,return GFormulaData
+                           ,GFormulaData `fmap` ((:) '$' `fmap` arbLowerWord) `ap` (sized (\n -> resize (n `div` 2) arbitrary))
                            ]
 
                                  
@@ -424,19 +407,29 @@ instance Arbitrary GTerm
                               
                                   return (GList args)
                             
+-- | Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to type /AtomicWord/ to construct an 'AtomicWord' 
+newtype AtomicWord = AtomicWord String
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Monoid,IsString)
+                                         
+instance Arbitrary AtomicWord where
+    arbitrary = frequency [  (5, AtomicWord <$> arbLowerWord)
+                            ,(1, AtomicWord <$> arbPrintable)
+                          ]
+
+             
 -- * Fixed-point style decorated formulae and terms
 
 -- | For a given type constructor @f@, make the fixed point type @Y@ satisfying: 
 --
--- > Y = Term0 (f Y)
+-- > Y = f (Term0 Y)
 --
 -- (modulo newtype wrapping). See for example 'diffFormula'.
 newtype TermFix f = TermFix { runTermFix :: f (Term0 (TermFix f)) }
     
 -- | For a given type constructor @f@, make the fixed point type @X@ satisfying: 
 --
--- > X = Formula0 Y (f X) 
--- > Y = Term0 (f Y)
+-- > X = f (Formula0 Y X) 
+-- > Y = f (Term0 Y)
 --
 -- (modulo newtype wrapping). See for example 'diffTerm'.
 newtype FormulaFix f = FormulaFix { runFormulaFix :: f (Formula0 (TermFix f) (FormulaFix f)) }

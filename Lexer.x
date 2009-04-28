@@ -16,16 +16,16 @@ $printable_char = .
 $viewable_char = [$printable_char\n]
                
     
-@not_star_slash = ( [^\*]* ("*"+) [^\/\*])* [^\*]*
-@sq_char = [^\'] | [\\][\']  
-@do_char = [^\"] | [\\][\"] 
+@not_star_slash = ( ([\n] | [^\*]) * ("*"+) ([\n] | [^\/\*]) )* ([\n] | [^\*])*
+@sq_char = [^\\\'] | [\\][\\\']  
+@do_char = [^\\\"] | [\\][\\\"] 
 
 @decimal_natural = [0]| $non_zero_numeric $numeric* 
 @signed_decimal = $sign @decimal_natural
 @decimal = @signed_decimal | @decimal_natural 
 @dot_decimal = "." $numeric $numeric*
 @decimal_fraction = @decimal @dot_decimal
-@decimal_exponent = @decimal | @decimal_fraction $exponent @decimal
+@decimal_exponent = ( @decimal | @decimal_fraction ) $exponent @decimal
                
 
 tokens :-
@@ -41,8 +41,8 @@ tokens :-
   "."                                          { withPos $ const Dot }
   ("%"|"#")$printable_char*                    { withPos $ CommentToken } -- comment line
   "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken } -- comment block 
-  "'" @sq_char+ "'"                            { withPos SingleQuoted }
-  "\"" @do_char+ "\""                          { withPos DoubleQuoted }
+  [\'] @sq_char* [\']                          { withPos SingleQuoted }
+  [\"] @do_char* [\"]                          { withPos DoubleQuoted }
   $dollar $dollar $lower_alpha $alpha_numeric* { withPos DollarDollarWord }
   $dollar $lower_alpha $alpha_numeric*         { withPos DollarWord }
   $upper_alpha $alpha_numeric*                 { withPos UpperWord }
@@ -50,9 +50,9 @@ tokens :-
   "*"                                          { withPos $ const Star }
   "+"                                          { withPos $ const Plus }
   ">"                                          { withPos $ const Rangle }
-  @decimal_fraction | @decimal_exponent        { withPos (Real . read) }
-  $sign @decimal_natural                       { withPos (SignedInt . read) }
-  @decimal_natural                             { withPos (UnsignedInt . read) }
+  @decimal_fraction | @decimal_exponent        { withPos (Real . read . stripPlus) }
+  $sign @decimal_natural                       { withPos (SignedInt . read . stripPlus) }
+  @decimal_natural                             { withPos (UnsignedInt . read . stripPlus) }
 
 
   
@@ -89,4 +89,7 @@ data Token =
 	deriving (Eq,Ord,Show)
 
 -- alex defines: alexScanTokens
+
+stripPlus ('+':xs) = xs
+stripPlus xs = xs
 }

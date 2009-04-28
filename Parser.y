@@ -73,7 +73,7 @@ TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
            
 TPTP_input  :: {TPTP_Input}
 TPTP_input  : annotated_formula  {$1} 
-             | include  { error "support for include not implemented" }
+             | include  { $1 }
              | comment { Comment $1 }
 
 annotated_formula  :: {TPTP_Input}
@@ -82,11 +82,11 @@ annotated_formula  :  fof_annotated  {$1}
 
 fof_annotated  :: {TPTP_Input}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
-       { AFormula          $3               $5      (recover_predsyms $7)      (fst $8) (snd $8) }
+       { AFormula          $3               $5      $7      (fst $8) (snd $8) }
                 
 cnf_annotated  :: {TPTP_Input}
 cnf_annotated  : cnf lp name  comma formula_role  comma cnf_formula  annotations  rp dot
-       { AFormula          $3              $5 (recover_predsyms (univquant_free_vars $7))(fst $8)(snd $8) }
+       { AFormula          $3              $5  (univquant_free_vars $7) (fst $8)(snd $8) }
        
        
 annotations  :: { (SourceInfo,UsefulInfo) }
@@ -94,7 +94,7 @@ annotations  :  comma source optional_info  { ($2,$3) }
     | { (NoSourceInfo, NoUsefulInfo) }
 
 formula_role  :: {Role}
-formula_role  : lower_word { Role $1 }
+formula_role  : lower_word_ { Role $1 }
 
 
 fof_formula  :: {Formula}
@@ -207,7 +207,7 @@ atomic_formula  :  plain_atomic_formula    {$1}
                  
 
 plain_atomic_formula  :: {Formula}
-plain_atomic_formula  : plain_term  {let FApp x args = $1 in PApp x args}
+plain_atomic_formula  : plain_term  {let TT (FunApp x args) = $1 in pApp x args}
 
 -- plain_atomic_formula  :== proposition  | predicate  lp arguments  rp 
 -- proposition  :== predicate 
@@ -218,7 +218,7 @@ defined_atomic_formula  :  defined_plain_formula  {$1}
                          | defined_infix_formula  {$1}
                          
 defined_plain_formula  :: {Formula}
-defined_plain_formula  : defined_plain_term  {let FApp x args = $1 in PApp x args}
+defined_plain_formula  : defined_plain_term  {let TT (FunApp x args) = $1 in pApp x args}
                         
 --defined_plain_formula  :== defined_prop  | defined_pred  lp arguments  rp 
 --defined_prop  :== atomic_defined_word 
@@ -240,7 +240,7 @@ infix_inequality  :: { Term -> Term -> Formula }
 infix_inequality  : nequals { (.!=.) }
 
 system_atomic_formula  :: {Formula} 
-system_atomic_formula  : system_term  {fromTerm $1}
+system_atomic_formula  : system_term  {let TT (FunApp x args) = $1 in pApp x args}
 
 term  :: {Term}                        
 term  :  function_term  {$1}
@@ -255,10 +255,10 @@ plain_term  :: {Term}
 plain_term  :  constant                  {fApp $1 []}
              | functor  lp arguments  rp {fApp $1 $3}
               
-constant  :: {String}
+constant  :: {AtomicWord}
 constant  : functor {$1}
 
-functor  :: {String}
+functor  :: {AtomicWord}
 functor  : atomic_word {$1}
 
 defined_term  :: {Term}                        
@@ -268,14 +268,14 @@ defined_term  : defined_atom {$1}
 
 defined_atom  :: {Term}                        
 defined_atom  : number {numberLitTerm $1} 
-               | distinct_object {distinctObjectTerm $1}
+               | distinct_object {distinctObjectTerm (stripQuotes '"' $1)}
                  
 defined_atomic_term :: {Term}                
 defined_atomic_term  : defined_plain_term {$1}
                       
 defined_plain_term  :: {Term}                        
-defined_plain_term  : defined_constant {fApp $1 []} 
-                     | defined_functor  lp arguments  rp {fApp $1 $3} 
+defined_plain_term  : defined_constant {fApp (AtomicWord $1) []} 
+                     | defined_functor  lp arguments  rp {fApp (AtomicWord $1) $3} 
 
 defined_constant  :: {String}
 defined_constant  : defined_functor {$1}
@@ -286,8 +286,8 @@ defined_functor  : atomic_defined_word {$1}
 -- defined_functor  :==
 
 system_term  :: {Term} 
-system_term  : system_constant  {fApp $1 []}
-              | system_functor  lp arguments  rp {fApp $1 $3} 
+system_term  :  system_constant  {fApp (AtomicWord $1) []}
+              | system_functor  lp arguments  rp {fApp (AtomicWord $1) $3} 
 
 system_constant  :: {String}                
 system_constant  : system_functor  {$1}
@@ -344,14 +344,14 @@ useful_info  : general_list  {UsefulInfo $1}
 -- assumptions_record  :== assumptions lp [name_list ] rp 
 -- refutation  :== refutation lp file_source  rp 
 
-include :: {()}
-include  : include_ lp file_name formula_selection  rp dot { error "Sorry, include  not implemented" } 
+include :: {TPTP_Input}
+include  : include_ lp file_name formula_selection  rp dot { Include $3 $4 } 
 
-formula_selection  :: {()}
-formula_selection  :  comma lbra name_list  rbra { undefined } 
-                    |   { undefined }
+formula_selection  :: {[AtomicWord]}
+formula_selection  :  comma lbra name_list  rbra { $3 } 
+                    |   { [] }
 
-name_list  :: {[String]}
+name_list  :: {[AtomicWord]}
 name_list  : name  {[$1]}
             | name  comma name_list  { $1 : $3 }
 
@@ -366,12 +366,12 @@ general_data  :  atomic_word  { GWord $1 }
                | atomic_word  lp general_terms  rp { GApp $1 $3 }  
                | variable  { GVar $1 }
                | number  { GNumber $1 }
-               | distinct_object { GDistinctObject $1 }
+               | distinct_object { GDistinctObject (stripQuotes '"' $1) }
                | formula_data  { $1 }
                
 formula_data :: {GData}
-formula_data  : dollar_word lp fof_formula  rp { error "formula_data not implemented" }
-            --   | dollar_word lp cnf_formula  rp { error "formula_data not implemented" }
+formula_data  : dollar_word lp fof_formula  rp { GFormulaData $1 $3 }
+              -- too ambiguous | dollar_word lp cnf_formula  rp { GFormulaData $1 $3 }
                 
 general_list  :: {[GTerm]}
 general_list  : lbra rbra {[]}
@@ -381,13 +381,13 @@ general_terms  :: {[GTerm]}
 general_terms  :  general_term  {[$1]} 
                 | general_term  comma general_terms  {$1 : $3}
 
-name  :: {String}
+name  :: {AtomicWord}
 name  : atomic_word  {$1}
-       | unsigned_integer {show $1}
+       | unsigned_integer {AtomicWord(show $1)}
          
-atomic_word  :: {String}       
-atomic_word  : lower_word {$1}
-              | single_quoted{$1}
+atomic_word  :: {AtomicWord}       
+atomic_word  : lower_word_ {AtomicWord $1}
+              | single_quoted{AtomicWord (stripQuotes '\'' $1)}
                 
 atomic_defined_word  :: {String}              
 atomic_defined_word  : dollar_word{$1}
@@ -399,9 +399,11 @@ number  :: {Double} -- maybe keep track of the number type that was actually par
 number  : real {$1} | signed_integer {fromIntegral $1} | unsigned_integer {fromIntegral $1}
     
 file_name  :: {String}              
-file_name  : single_quoted {$1}
+file_name  : single_quoted {stripQuotes '\'' $1}
             
-
+lower_word_ :: {String}
+lower_word_ : lower_word {$1} | fof {"fof"} | cnf {"cnf"} | include_ {"include"} -- "fof" is a perfectly cromulent lower_word, but it is interpreted as a "fof" token
+                               
 
 
 
@@ -409,6 +411,13 @@ file_name  : single_quoted {$1}
        
 {
 
-                   
+stripQuotes which (x:xs) = go xs
+                      where
+                        go [x] = []
+                        go ('\\':'\\':xs) = '\\':go xs
+                        go ('\\':which:xs) = which:go xs
+                        go (x:xs) = x:go xs
+                     
+  
 }
 

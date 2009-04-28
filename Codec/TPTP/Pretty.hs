@@ -5,6 +5,7 @@
 module Codec.TPTP.Pretty where
 
 import Codec.TPTP.Base
+import Codec.TPTP.Export
 import Text.PrettyPrint.ANSI.Leijen
 import Data.Data
 
@@ -12,10 +13,10 @@ oper :: String -> Doc
 oper = dullyellow . text
 prettyvar :: String -> Doc
 prettyvar = blue . text
-psym :: String -> Doc
-psym = green . text
-fsym :: String -> Doc
-fsym = yellow . text
+psym :: forall a. (Pretty a) => a -> Doc
+psym = green . pretty
+fsym :: forall a. (Pretty a) => a -> Doc
+fsym = yellow . pretty
 
 wtext :: String -> Doc
 wtext = white.text
@@ -84,7 +85,7 @@ instance Pretty TPTP_Input where
           </>
           vsep
           [
-            (red.text) name <+> dullwhite (text "role:") <+> (magenta.text.unrole) role
+            (red.pretty) name <+> dullwhite (text "role:") <+> (magenta.text.unrole) role
           , pretty formula
           , pretty sourceInfo
           , pretty usefulInfo
@@ -93,6 +94,9 @@ instance Pretty TPTP_Input where
                            
     pretty (Comment str)
         = magenta . string $ str
+          
+    pretty (Include f sel) = text "include" <> parens (squotes (text f) <> (case sel of { [] -> empty; _ -> comma <+> sep (punctuate comma (fmap pretty sel)) } )) 
+                                                       
                            
     prettyList = foldr (\x xs -> pretty x <$> xs) empty 
                
@@ -107,7 +111,6 @@ instance (Pretty (WithEnclosing t), Pretty (WithEnclosing f)) => Pretty ((WithEn
              case formu of
                Quant _ _ _ -> EnclQuant 
                PredApp _ _ -> EnclNothing -- arguments are comma-seperated, so they don't need any parens
-               FromTerm _ -> EnclNothing
                (:~:) _ -> EnclNeg
                BinOp _ op _ -> EnclBinOp op
                InfixPred _ op _ -> EnclInfixPred op
@@ -130,7 +133,6 @@ instance (Pretty (WithEnclosing t), Pretty (WithEnclosing f)) => Pretty ((WithEn
             PredApp p [] -> psym p
             PredApp p args -> psym p <> prettyargs (fmap wne args)
 
-            FromTerm t -> text "fromTerm" <> parens (pretty (wne t))
             
             BinOp f1 op f2 ->
                 align $ sep [indent 0 $ pretty (wne f1), pretty op, indent 0 $ pretty (wne f2)]
@@ -205,9 +207,11 @@ instance Pretty GData where
     pretty (GDistinctObject x) = cyan (dquotes (text x))
     pretty (GApp x []) = fsym x
     pretty (GApp x args) = fsym x <+> prettyargs args
-    pretty (GFormulaData) = dullwhite . text $ "GFormulaData (not implemented)"
+    pretty (GFormulaData s f) = text s <> align (parens (pretty f))
     pretty (GVar x) = prettyvar x
 
+instance Pretty AtomicWord where
+    pretty (AtomicWord x) = (if isLowerWord x then text else squotes.text) x 
 
 instance Pretty GTerm where
     pretty (GTerm x) = pretty x
