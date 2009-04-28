@@ -35,6 +35,14 @@ description:
 category: Codec,Logic
 author: Daniel Schüssler
 cabal-version: >= 1.6
+extra-source-files: testing/compileTests.sh
+                    testing/TestImportExportRandom.hs
+                    testing/TestImportExportImportFile.hs
+                    testing/PrettyPrintFile.hs
+                    testing/PrettyPrintFile.hs
+                    testing/bin
+                    testing/obj
+                    testing
 
 source-repository head
  type: darcs
