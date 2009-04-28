@@ -41,7 +41,7 @@ extra-source-files: testing/compileTests.sh
                     testing/PrettyPrintFile.hs
                     testing/PrettyPrintFile.hs
                     
-tested-with: ghc-6.10.2
+tested-with: GHC==6.10.2
 
 source-repository head
  type: darcs
