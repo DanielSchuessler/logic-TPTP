@@ -40,9 +40,6 @@ extra-source-files: testing/compileTests.sh
                     testing/TestImportExportImportFile.hs
                     testing/PrettyPrintFile.hs
                     testing/PrettyPrintFile.hs
-                    testing/bin
-                    testing/obj
-                    testing
 
 source-repository head
  type: darcs

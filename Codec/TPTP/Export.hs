@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts -XStandaloneDeriving -XRecordWildCards -XNoMonomorphismRestriction -fwarn-missing-signatures #-}
+{-# OPTIONS -fglasgow-exts -XStandaloneDeriving -XRecordWildCards -XNoMonomorphismRestriction -fwarn-missing-signatures -Wall #-}
 
 module Codec.TPTP.Export(toTPTP',ToTPTP(..),isLowerWord) where
     
@@ -10,11 +10,13 @@ toTPTP' = ($"") . toTPTP
     
 s :: String -> String -> String
 s = showString
+    
 comma :: String -> String
 comma = s ","
+        
 commaSepMap :: forall a.
                (a -> String -> String) -> [a] -> String -> String
-commaSepMap f [] = s ""
+commaSepMap _ [] = s ""
 commaSepMap f (y:ys) = f y . foldr (\x xs -> comma . f x . xs) id ys 
                        
 
@@ -147,6 +149,6 @@ isReallyAlnum :: Char -> Bool
 isReallyAlnum x = isBetween 'a' x 'z' || isBetween 'A' x 'Z' || isBetween '0' x '9' || x=='_'  
              
 isLowerWord :: [Char] -> Bool
-isLowerWord x = case x of
+isLowerWord str = case str of
                                (x:xs) | isBetween 'a' x 'z' && all isReallyAlnum xs -> True
                                _ -> False

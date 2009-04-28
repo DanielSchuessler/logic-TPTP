@@ -1,4 +1,4 @@
-{-# OPTIONS -fwarn-missing-signatures -XRecordWildCards -XCPP -XDeriveDataTypeable -fglasgow-exts -XNoMonomorphismRestriction -XTemplateHaskell -XUndecidableInstances -XGeneralizedNewtypeDeriving #-}
+{-# OPTIONS -fwarn-missing-signatures -XRecordWildCards -XCPP -XDeriveDataTypeable -fglasgow-exts -XNoMonomorphismRestriction -XTemplateHaskell -XUndecidableInstances -XGeneralizedNewtypeDeriving -Wall #-}
 
 module Codec.TPTP.Base where
     
@@ -12,7 +12,6 @@ import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
 import Test.QuickCheck
 import Data.Char
 import Control.Monad
-import Debug.Trace
 import Codec.TPTP.QuickCheck
 import Data.String
 import Data.Monoid hiding(All)
@@ -199,11 +198,11 @@ free_vars0 x = case cast x :: Maybe Formula of
                 Just (FF (Quant Exists vars f0)) -> free_vars0 f0 `S.difference` S.fromList vars 
                 Just (FF f)                -> unions (gmapQ free_vars0 f)
                 
-                otherwise ->
+                _ ->
                   case cast x :: Maybe Term of 
                     Just (TT (Var s)) -> S.singleton s
                     Just (TT t)       -> unions (gmapQ free_vars0 t)
-                    otherwise    -> S.empty
+                    _    -> S.empty
                                    
                                    
 
@@ -239,19 +238,21 @@ instance Arbitrary Term
     where arbitrary = fmap TT arbitrary
 
 instance Arbitrary SourceInfo
-    where arbitrary = do x <- choose (0 :: Int, 1)
-                         case x of
-                             0 -> return NoSourceInfo
-                             1 -> do x1 <- arbitrary
-                                     return (SourceInfo x1)
-
+    where arbitrary = oneof [
+                              return NoSourceInfo
+                            , do 
+                                x1 <- arbitrary
+                                return (SourceInfo x1)
+                      ]
+                      
 instance Arbitrary UsefulInfo
-    where arbitrary = do x <- choose (0 :: Int, 1)
-                         case x of
-                             0 -> return NoUsefulInfo
-                             1 -> do x1 <- arbitrary
-                                     return (UsefulInfo x1)
-
+    where arbitrary = oneof [
+                              return NoUsefulInfo
+                             , do 
+                                x1 <- arbitrary
+                                return (UsefulInfo x1)
+                      ]
+          
 instance Arbitrary Role
     where arbitrary = Role `fmap` arbLowerWord
                
@@ -266,36 +267,34 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Formula0 a b)
             go 0 = flip PredApp [] `fmap` arbitrary
                    
             go i =  
-                   do 
-                     x <- choose (0 :: Int, 4)
-                     case x of
-                             0 -> do 
+                oneof [ do
                                   ileft <- choose (0,i-1)
                                   x1 <- resize ileft arbitrary
                                   x2 <- arbitrary
                                   x3 <- resize (i - 1 - ileft) arbitrary 
                                   return (BinOp x1 x2 x3)
                                          
-                             1 -> do 
+                      , do 
                                   x1 <- arbitrary
                                   x2 <- arbitrary
                                   x3 <- arbitrary
                                   return (InfixPred x1 x2 x3)
                                          
-                             2 -> do 
+                      , do
                                   x1 <- arbitrary
                                   x2 <- argsFreq vector
                                   return (PredApp x1 x2)
                                             
-                             3 -> do 
+                      , do
                                x1 <- arbitrary
                                x2 <- liftM2 (:) arbVar (argsFreq (\nargs -> vectorOf nargs arbVar))
                                x3 <- resize (i-1) arbitrary
                                return (Quant x1 x2 x3)
                                            
-                             4 -> do 
+                      , do
                                   x1 <- resize (i-1) arbitrary
                                   return ((:~:) x1)
+                      ]
                                           
 instance Arbitrary BinOp
     where arbitrary = elements
@@ -385,20 +384,18 @@ instance Arbitrary GTerm
                 go 0 = fmap GTerm arbitrary
 
                 go i =
-                       do 
-                         x <- choose (0 :: Int, 2)
-                         case x of
-                             0 -> do  
+                    oneof [
+                            do  
                                   ileft <- choose(0,i-1)
                                   x1 <- resize ileft arbitrary
                                   x2 <- resize (i-1-ileft) arbitrary
                                   return (ColonSep x1 x2)
                                          
-                             1 -> do 
+                          , do
                                   x1 <- arbitrary
                                   return (GTerm x1)
                                             
-                             2 -> do 
+                          , do
                                   args <- argsFreq 
                                            (\nargs -> do
                                               parti <- arbPartition nargs (i-1)
@@ -406,6 +403,7 @@ instance Arbitrary GTerm
                                            ) `suchThat` (/= [])
                               
                                   return (GList args)
+                       ]
                             
 -- | Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to type /AtomicWord/ to construct an 'AtomicWord' 
 newtype AtomicWord = AtomicWord String

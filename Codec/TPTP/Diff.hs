@@ -25,7 +25,7 @@ import System.UTF8IO
 
 data DiffResult d = 
           Same -- ^ Both arguments are the same. 
-        | SameHead d -- ^ The arguments are recursive expressions of the same form, but their subterms differ. Return an "decorated" term that shows where the differences are 
+        | SameHead d -- ^ The arguments are recursive expressions of the same form, but their subterms differ. Return a \"decorated\" term that shows where the differences are 
         | Differ d d -- ^ The arguments differ and are not of similar form (don't recurse)
         | DontCare
     deriving (Eq,Ord,Show,Data,Typeable,Read)

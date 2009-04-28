@@ -2,7 +2,8 @@
 
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
-module Codec.TPTP.Pretty where
+-- | Mainly just 'Pretty' instances
+module Codec.TPTP.Pretty(prettySimple,WithEnclosing(..),Enclosing(..)) where
 
 import Codec.TPTP.Base
 import Codec.TPTP.Export
@@ -18,8 +19,8 @@ psym = green . pretty
 fsym :: forall a. (Pretty a) => a -> Doc
 fsym = yellow . pretty
 
-wtext :: String -> Doc
-wtext = white.text
+--wtext :: String -> Doc
+--wtext = white.text
        
 prettyargs :: forall a. (Pretty a) => [a] -> Doc
 --prettyargs = encloseSep (wtext "(") (wtext ")") (wtext ",") . fmap pretty
