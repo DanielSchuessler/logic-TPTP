@@ -40,10 +40,13 @@ extra-source-files: testing/compileTests.sh
                     testing/TestImportExportImportFile.hs
                     testing/PrettyPrintFile.hs
                     testing/PrettyPrintFile.hs
+                    
+tested-with: ghc-6.10.2
 
 source-repository head
  type: darcs
  location: http://code.haskell.org/~daniels/logic-TPTP
+ 
  
 
 Library
