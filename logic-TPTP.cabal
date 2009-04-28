@@ -32,7 +32,7 @@ description:
  .
  
  
-category: Codec,Logic
+category: Codec,Math,Theorem Provers
 author: Daniel Schüssler
 cabal-version: >= 1.6
 extra-source-files: testing/compileTests.sh
