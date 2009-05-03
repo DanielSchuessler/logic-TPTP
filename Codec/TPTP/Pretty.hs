@@ -9,11 +9,10 @@ import Codec.TPTP.Base
 import Codec.TPTP.Export
 import Text.PrettyPrint.ANSI.Leijen
 import Data.Data
+import Control.Monad.Identity
 
 oper :: String -> Doc
 oper = dullyellow . text
-prettyvar :: String -> Doc
-prettyvar = blue . text
 psym :: forall a. (Pretty a) => a -> Doc
 psym = green . pretty
 fsym :: forall a. (Pretty a) => a -> Doc
@@ -88,8 +87,7 @@ instance Pretty TPTP_Input where
           [
             (red.pretty) name <+> dullwhite (text "role:") <+> (magenta.text.unrole) role
           , pretty formula
-          , pretty sourceInfo
-          , pretty usefulInfo
+          , pretty annotations
           ,empty
           ]
                            
@@ -125,7 +123,7 @@ instance (Pretty (WithEnclosing t), Pretty (WithEnclosing f)) => Pretty ((WithEn
 
             Quant q vars f ->
                pretty q 
-               <+> brackets (hsep (punctuate comma (fmap prettyvar vars))) 
+               <+> brackets (hsep (punctuate comma (fmap pretty vars))) 
                <> dot 
                </> pretty (wne f)
 
@@ -160,7 +158,7 @@ instance Pretty InfixPred where
 instance (Pretty (WithEnclosing t)) => Pretty (WithEnclosing (Term0 t)) where
     pretty (WithEnclosing _ x) = 
         case x of 
-          Var s -> prettyvar s
+          Var s -> pretty s
           NumberLitTerm d -> text (show d)
           DistinctObjectTerm s -> cyan (dquotes (text s))
           FunApp f [] -> fsym f
@@ -169,19 +167,20 @@ instance (Pretty (WithEnclosing t)) => Pretty (WithEnclosing (Term0 t)) where
                         
 
 instance Pretty (Formula0 Term Formula) where
-    pretty = pretty . WithEnclosing EnclNothing . FF
+    pretty = pretty . WithEnclosing EnclNothing . F . Identity
                    
 instance Pretty (Term0 Term) where
-    pretty = pretty . WithEnclosing EnclNothing . TT
+    pretty = pretty . WithEnclosing EnclNothing . T . Identity
              
 instance Pretty (WithEnclosing Formula) where
-    pretty (WithEnclosing x (FF y)) = pretty (WithEnclosing x y) 
+    pretty (WithEnclosing x (F (Identity y))) = pretty (WithEnclosing x y) 
                              
 instance Pretty (WithEnclosing Term) where
-    pretty (WithEnclosing x (TT y)) = pretty (WithEnclosing x y) 
+    pretty (WithEnclosing x (T (Identity y))) = pretty (WithEnclosing x y) 
                              
 deriving instance Pretty Formula
 deriving instance Pretty Term
+deriving instance Pretty a => Pretty (Identity a)
                      
 -- instance (Pretty f, Pretty t) => Pretty (Formula0 t f) where
 --     pretty = pretty . WithEnclosing ""
@@ -192,12 +191,12 @@ deriving instance Pretty Term
 prettySimple :: Pretty a => a -> String
 prettySimple x = displayS (renderPretty 0.9 80 (pretty x)) ""
 
-instance Pretty SourceInfo where
-    pretty NoSourceInfo = dullwhite . text $ "NoSourceInfo"
-    pretty (SourceInfo x) = dullwhite (text "SourceInfo: ") <+> pretty x
+instance Pretty Annotations where
+    pretty NoAnnotations = dullwhite . text $ "NoAnnotations"
+    pretty (Annotations a b) = dullwhite (text "SourceInfo: ") <+> pretty a <+> pretty b
 
 instance Pretty UsefulInfo where
-    pretty NoUsefulInfo = dullwhite . text $ "NoUsefulInfo"
+    pretty NoUsefulInfo = empty
     pretty (UsefulInfo x) = dullwhite (text "UsefulInfo: ") <+> pretty x
 
 
@@ -209,7 +208,7 @@ instance Pretty GData where
     pretty (GApp x []) = fsym x
     pretty (GApp x args) = fsym x <+> prettyargs args
     pretty (GFormulaData s f) = text s <> align (parens (pretty f))
-    pretty (GVar x) = prettyvar x
+    pretty (GVar x) = pretty x
 
 instance Pretty AtomicWord where
     pretty (AtomicWord x) = (if isLowerWord x then text else squotes.text) x 
@@ -222,3 +221,6 @@ instance Pretty GTerm where
                           f "[" <+> (fillSep . punctuate comma . fmap pretty) xs <+> f "]"
                                  
                                  
+
+instance Pretty V where                            
+    pretty (V x) = blue . text $ x

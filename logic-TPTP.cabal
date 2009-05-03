@@ -52,9 +52,15 @@ source-repository head
 Library
  ghc-options:     -O2
  
- build-depends:    base >=4 ,array, syb, containers, haskell98
-                   , ansi-wl-pprint, QuickCheck>=2               
+ build-depends:      base >=4 
+                   , array
+                   , syb
+                   , containers
+                   , haskell98
+                   , ansi-wl-pprint
+                   , QuickCheck >= 2               
                    , utf8-prelude
+                   , mtl
  
  exposed-modules:   Codec.TPTP.Import
                    ,Codec.TPTP.Base

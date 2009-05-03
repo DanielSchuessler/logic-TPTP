@@ -11,6 +11,7 @@ import Data.Set as S
 import Codec.TPTP.Base
 import System.IO
 import System.IO.Unsafe
+import Control.Monad.Identity
 }
 
 %name parseTPTP
@@ -82,16 +83,16 @@ annotated_formula  :  fof_annotated  {$1}
 
 fof_annotated  :: {TPTP_Input}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
-       { AFormula          $3               $5      $7      (fst $8) (snd $8) }
+       { AFormula        $3               $5                $7           $8 }
                 
 cnf_annotated  :: {TPTP_Input}
 cnf_annotated  : cnf lp name  comma formula_role  comma cnf_formula  annotations  rp dot
-       { AFormula          $3              $5  (univquant_free_vars $7) (fst $8)(snd $8) }
+       { AFormula          $3              $5  (univquant_free_vars $7) $8 }
        
        
-annotations  :: { (SourceInfo,UsefulInfo) }
-annotations  :  comma source optional_info  { ($2,$3) } 
-    | { (NoSourceInfo, NoUsefulInfo) }
+annotations  :: { Annotations }
+annotations  :  comma source optional_info  { Annotations $2 $3 } 
+    | { NoAnnotations }
 
 formula_role  :: {Role}
 formula_role  : lower_word_ { Role $1 }
@@ -142,7 +143,7 @@ quantified_formula  :: {Formula}
 quantified_formula  : quantifier  lbra variable_list  rbra colon unitary_formula 
                      {      $1                $3                           $6 }
 
-variable_list  :: {[String]}
+variable_list  :: {[V]}
 variable_list  : variable  { [$1] }
                 | variable  comma variable_list  { $1 : $3 }
 
@@ -178,7 +179,7 @@ literal  : atomic_formula  {$1}
 fol_infix_unary  :: {Formula}
 fol_infix_unary  : term  infix_inequality  term  { $2 $1 $3 }
 
-quantifier :: {[String] -> Formula -> Formula}
+quantifier :: {[V] -> Formula -> Formula}
 quantifier  : exclam { for_all } | question { exists }
 
 binary_connective  :: {Formula -> Formula -> Formula}
@@ -207,7 +208,7 @@ atomic_formula  :  plain_atomic_formula    {$1}
                  
 
 plain_atomic_formula  :: {Formula}
-plain_atomic_formula  : plain_term  {let TT (FunApp x args) = $1 in pApp x args}
+plain_atomic_formula  : plain_term  { fApp2pApp $1 }
 
 -- plain_atomic_formula  :== proposition  | predicate  lp arguments  rp 
 -- proposition  :== predicate 
@@ -218,7 +219,7 @@ defined_atomic_formula  :  defined_plain_formula  {$1}
                          | defined_infix_formula  {$1}
                          
 defined_plain_formula  :: {Formula}
-defined_plain_formula  : defined_plain_term  {let TT (FunApp x args) = $1 in pApp x args}
+defined_plain_formula  : defined_plain_term  {fApp2pApp $1}
                         
 --defined_plain_formula  :== defined_prop  | defined_pred  lp arguments  rp 
 --defined_prop  :== atomic_defined_word 
@@ -240,7 +241,7 @@ infix_inequality  :: { Term -> Term -> Formula }
 infix_inequality  : nequals { (.!=.) }
 
 system_atomic_formula  :: {Formula} 
-system_atomic_formula  : system_term  {let TT (FunApp x args) = $1 in pApp x args}
+system_atomic_formula  : system_term  {fApp2pApp $1}
 
 term  :: {Term}                        
 term  :  function_term  {$1}
@@ -295,15 +296,15 @@ system_constant  : system_functor  {$1}
 system_functor  :: {String}                
 system_functor  : atomic_system_word {$1}
                  
-variable  :: {String}
-variable  : upper_word {$1}
+variable  :: {V}
+variable  : upper_word {V $1}
 
 arguments  :: {[Term]}
 arguments  : term  {[$1]}
             | term  comma arguments  { $1 : $3 }
 
-source  :: {SourceInfo} 
-source  : general_term  {SourceInfo $1}
+source  :: {GTerm} 
+source  : general_term  {$1}
 
 -- source  :== dag_source  | internal_source  | external_source  | unknown
 
@@ -418,6 +419,6 @@ stripQuotes which (x:xs) = go xs
                         go ('\\':which:xs) = which:go xs
                         go (x:xs) = x:go xs
                      
-  
+fApp2pApp (T (Identity (FunApp x args))) = (F (Identity (PredApp x args))) 
 }
 

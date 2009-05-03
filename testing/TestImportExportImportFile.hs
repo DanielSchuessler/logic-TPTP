@@ -56,12 +56,18 @@ diff_once_twice = do
   let dif = mconcat (zipWith diffAFormula once twice)
   let success = (putStrLn . prettySimple . dullgreen . text $ "Ok") >> exitWith ExitSuccess
             
-  case dif of 
-    OtherSame -> success 
-    FormulaDiff (FormulaFix Same) -> success
-    _ -> do
-      putStrLn . prettySimple $ dif
-      exitWith (ExitFailure 1)
+  -- case dif of 
+  --   OtherSame -> success 
+  --   FormulaDiff (F Same) -> success
+  --   _ -> do
+  --     putStrLn . prettySimple $ dif
+  --     exitWith (ExitFailure 1)
+                
+  if once==twice
+     then success
+     else do
+       putStrLn . prettySimple $ dif
+       exitWith (ExitFailure 1)
        
   
   

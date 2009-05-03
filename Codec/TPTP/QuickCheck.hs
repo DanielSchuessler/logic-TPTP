@@ -46,6 +46,10 @@ arbLowerWord :: Gen String
 arbLowerWord = (:) `fmap` elements ['a'..'z'] `ap` listOf (elements (['a'..'z']++['A'..'Z']++"_"))
 
 
+arbUpperWord :: Gen String
+arbUpperWord = (:) `fmap` elements ['A'..'Z'] `ap` listOf (elements (['a'..'z']++['A'..'Z']++"_"))
+
+               
 arbNum :: forall a a1. (Arbitrary a, Num a) => (a -> a1) -> Gen a1
 arbNum f =
     frequency [(1,fmap f arbitrary)

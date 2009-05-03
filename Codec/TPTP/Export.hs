@@ -3,6 +3,7 @@
 module Codec.TPTP.Export(toTPTP',ToTPTP(..),isLowerWord) where
     
 import Codec.TPTP.Base
+import Control.Monad.Identity
     
 -- | Convenient wrapper for 'toTPTP'
 toTPTP' :: forall a. (ToTPTP a) => a -> String
@@ -32,7 +33,7 @@ instance ToTPTP [TPTP_Input] where
 instance ToTPTP TPTP_Input where
     toTPTP AFormula{..} =
         s "fof(" . toTPTP name . comma . toTPTP role . comma .
-          toTPTP formula . toTPTP sourceInfo . toTPTP usefulInfo . s ")."
+          toTPTP formula . toTPTP annotations . s ")."
                  
     toTPTP (Comment x) =
         s x -- % included in x 
@@ -68,7 +69,7 @@ instance (ToTPTP f, ToTPTP t) => ToTPTP (Formula0 t f) where
 
                    toTPTP q 
                       . s " [" 
-                      . commaSepMap s vars 
+                      . commaSepMap toTPTP vars 
                       . s "] : " 
                       . showParen par (toTPTP f)
                           
@@ -88,21 +89,21 @@ instance ToTPTP t => ToTPTP (Term0 t) where
     toTPTP term =
          
              case term of 
-               Var x -> s x
+               Var x -> toTPTP x
                NumberLitTerm d -> shows d
                DistinctObjectTerm x -> showString (tptpQuote x)
                FunApp f [] -> toTPTP f
                FunApp f args -> toTPTP f . s "(" . commaSepMap toTPTP args . s ")"
                         
 
-         
+deriving instance (ToTPTP a) => (ToTPTP (Identity a))         
 deriving instance ToTPTP Formula
 deriving instance ToTPTP Term
 
 
-instance ToTPTP SourceInfo where
-    toTPTP NoSourceInfo = s ""
-    toTPTP (SourceInfo x) = s "," . toTPTP x
+instance ToTPTP Annotations where
+    toTPTP NoAnnotations = s ""
+    toTPTP (Annotations a b) = s "," . toTPTP a . toTPTP b
 
 instance ToTPTP UsefulInfo where
     toTPTP NoUsefulInfo = s ""
@@ -121,7 +122,7 @@ instance ToTPTP GData where
  toTPTP gd = case gd of
    GWord x -> toTPTP x
    GApp x args -> toTPTP x . s "(" . commaSepMap toTPTP args . s ")"
-   GVar x -> s x
+   GVar x -> toTPTP x
    GNumber x -> shows x
    GDistinctObject x -> showString (tptpQuote x)
    GFormulaData str formu -> s str . s "(" . toTPTP formu . s ")" 
@@ -152,3 +153,6 @@ isLowerWord :: [Char] -> Bool
 isLowerWord str = case str of
                                (x:xs) | isBetween 'a' x 'z' && all isReallyAlnum xs -> True
                                _ -> False
+
+instance ToTPTP V where
+    toTPTP (V x) = s x

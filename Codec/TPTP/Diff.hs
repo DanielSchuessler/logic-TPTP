@@ -13,12 +13,12 @@ import Prelude hiding (putStrLn)
 --import Test.QuickCheck.Instances
 import Test.QuickCheck hiding((.&.))
 import Data.Char()
-import Control.Monad
 import Debug.Trace()
 import Codec.TPTP.Base
 import Codec.TPTP.Pretty
 import Text.PrettyPrint.ANSI.Leijen
 import System.UTF8IO
+import Control.Monad.Identity
     
     
     
@@ -137,17 +137,17 @@ handleLeaf constr x1 x2 =
              
 -- runDiffTerm :: Term
 --                -> Term
---                -> DiffResult (Term0 (TermFix DiffResult))
--- runDiffTerm t1 t2 = runTermFix (diffTerm t1 t2)
+--                -> DiffResult (Term0 (T DiffResult))
+-- runDiffTerm t1 t2 = runT (diffTerm t1 t2)
 
-diffTerm :: Term -> Term -> TermFix DiffResult
-diffTerm (TT t1) (TT t2) = TermFix $
+diffTerm :: Term -> Term -> T DiffResult
+diffTerm (T (Identity t1)) (T (Identity t2)) = T $
     case (t1,t2) of
-      (FunApp x1 args1,FunApp x2 args2) -> handleAppExpr diffTerm TermFix runTermFix FunApp x1 args1 x2 args2 
+      (FunApp x1 args1,FunApp x2 args2) -> handleAppExpr diffTerm T runT FunApp x1 args1 x2 args2 
       (Var x1,Var x2) -> handleLeaf Var x1 x2
       (DistinctObjectTerm x1, DistinctObjectTerm x2) -> handleLeaf DistinctObjectTerm x1 x2
       (NumberLitTerm x1, NumberLitTerm x2) -> handleLeaf NumberLitTerm x1 x2
-      _ -> let plug=plugSubterms (TermFix DontCare) in Differ (plug t1) (plug t2)
+      _ -> let plug=plugSubterms (T DontCare) in Differ (plug t1) (plug t2)
           
 plugSubterms :: forall a a1. a -> Term0 a1 -> Term0 a
 plugSubterms p t = case t of
@@ -167,56 +167,56 @@ plugSubformulae pt pf f = case f of
                                                                   
                                    
           
-diffFormula :: Formula -> Formula -> FormulaFix DiffResult
-diffFormula (FF f1) (FF f2) = FormulaFix $
+diffFormula :: Formula -> Formula -> F DiffResult
+diffFormula (F (Identity f1)) (F (Identity f2)) = F $
     case (f1,f2) of
       ( Quant q1 vars1 g1
        ,Quant q2 vars2 g2) -> 
           case (q1==q2, vars1==vars2) of
-            (True,True) -> handleUnary diffFormula FormulaFix runFormulaFix (Quant q1 vars1) g1 g2   
-            _ -> Differ (Quant q1 vars1 (FormulaFix DontCare)) 
-                       (Quant q2 vars2 (FormulaFix DontCare)) 
+            (True,True) -> handleUnary diffFormula F runF (Quant q1 vars1) g1 g2   
+            _ -> Differ (Quant q1 vars1 (F DontCare)) 
+                       (Quant q2 vars2 (F DontCare)) 
                            
 
       ( BinOp l1 op1 r1
-       ,BinOp l2 op2 r2 ) -> handleBinExpr diffFormula FormulaFix runFormulaFix BinOp l1 op1 r1 l2 op2 r2
+       ,BinOp l2 op2 r2 ) -> handleBinExpr diffFormula F runF BinOp l1 op1 r1 l2 op2 r2
                                          
       ( InfixPred l1 op1 r1
-       ,InfixPred l2 op2 r2 ) -> handleBinExpr diffTerm TermFix runTermFix InfixPred l1 op1 r1 l2 op2 r2
+       ,InfixPred l2 op2 r2 ) -> handleBinExpr diffTerm T runT InfixPred l1 op1 r1 l2 op2 r2
                  
       ( (:~:) g1
-       ,(:~:) g2 ) -> handleUnary diffFormula FormulaFix runFormulaFix (:~:) g1 g2
+       ,(:~:) g2 ) -> handleUnary diffFormula F runF (:~:) g1 g2
 
       
       ( PredApp x1 args1
-       ,PredApp x2 args2 ) -> handleAppExpr diffTerm TermFix runTermFix PredApp x1 args1 x2 args2 
+       ,PredApp x2 args2 ) -> handleAppExpr diffTerm T runT PredApp x1 args1 x2 args2 
                        
-      _ -> let plug=plugSubformulae (TermFix DontCare) (FormulaFix DontCare) in Differ (plug f1) (plug f2)
+      _ -> let plug=plugSubformulae (T DontCare) (F DontCare) in Differ (plug f1) (plug f2)
 
 
-instance Show (TermFix DiffResult) where
-    show (TermFix t) = show t
+instance Show (T DiffResult) where
+    show (T t) = show t
 
-instance Show (FormulaFix DiffResult) where
-    show (FormulaFix f) = show f
+instance Show (F DiffResult) where
+    show (F f) = show f
          
-type T0Diff = DiffResult (Term0 (TermFix DiffResult))
-type F0Diff = DiffResult (Formula0 (TermFix DiffResult) (FormulaFix DiffResult))
+type T0Diff = DiffResult (Term0 (T DiffResult))
+type F0Diff = DiffResult (Formula0 (T DiffResult) (F DiffResult))
     
 
 wildcard :: AtomicWord
 wildcard = "_"
                             
 instance Pretty (WithEnclosing T0Diff) where
-    pretty = prettyHelper (plugSubterms (TT (FunApp wildcard [])))
+    pretty = prettyHelper --(plugSubterms (fApp wildcard []))
  
 instance Pretty (WithEnclosing F0Diff) where
-    pretty = prettyHelper (plugSubformulae (TT (FunApp wildcard [])) (FF (PredApp wildcard [])))
+    pretty = prettyHelper --(plugSubformulae (fApp wildcard []) (pApp wildcard []))
        
-prettyHelper :: forall t a.
-                (Pretty (WithEnclosing t), Pretty (WithEnclosing a)) =>
-                (t -> a) -> WithEnclosing (DiffResult t) -> Doc
-prettyHelper _ (WithEnclosing _ d) = 
+prettyHelper :: forall t.
+                (Pretty (WithEnclosing t)) =>
+                WithEnclosing (DiffResult t) -> Doc
+prettyHelper (WithEnclosing _ d) = 
         let 
             pwe = pretty . WithEnclosing EnclNothing
         in
@@ -235,15 +235,15 @@ prettyHelper _ (WithEnclosing _ d) =
                               , pwe y
                               ]
                                                          
-deriving instance Pretty (TermFix DiffResult)
+deriving instance Pretty (T DiffResult)
 
-deriving instance Pretty (FormulaFix DiffResult)
+deriving instance Pretty (F DiffResult)
          
-instance Pretty (WithEnclosing (TermFix DiffResult)) where
-    pretty (WithEnclosing x (TermFix y)) = pretty (WithEnclosing x y) 
+instance Pretty (WithEnclosing (T DiffResult)) where
+    pretty (WithEnclosing x (T y)) = pretty (WithEnclosing x y) 
                                            
-instance Pretty (WithEnclosing (FormulaFix DiffResult)) where
-    pretty (WithEnclosing x (FormulaFix y)) = pretty (WithEnclosing x y) 
+instance Pretty (WithEnclosing (F DiffResult)) where
+    pretty (WithEnclosing x (F y)) = pretty (WithEnclosing x y) 
                                               
 instance Pretty (T0Diff) where
     pretty = pretty . WithEnclosing EnclNothing
@@ -251,18 +251,18 @@ instance Pretty (T0Diff) where
 instance Pretty (F0Diff) where
     pretty = pretty . WithEnclosing EnclNothing
 
--- instance Pretty (DiffResult (TermFix DiffResult)) where
---     pretty = pretty . WithEnclosing EnclNothing . TermFix
+-- instance Pretty (DiffResult (T DiffResult)) where
+--     pretty = pretty . WithEnclosing EnclNothing . T
     
--- instance Pretty (DiffResult (TermFix DiffResult) (FormulaFix DiffResult)) where
---     pretty = pretty . WithEnclosing EnclNothing . FormulaFix
+-- instance Pretty (DiffResult (T DiffResult) (F DiffResult)) where
+--     pretty = pretty . WithEnclosing EnclNothing . F
                                               
                                   
 -- runFormulaDiff :: Formula
 --                   -> Formula
 --                   -> DiffResult
---                        (Formula0 (TermFix DiffResult) (FormulaFix DiffResult))
--- runFormulaDiff a b = runFormulaFix (diffFormula a b)
+--                        (Formula0 (T DiffResult) (F DiffResult))
+-- runFormulaDiff a b = runF (diffFormula a b)
                      
 -- | Less random generator for generating formulae suitable for testing diff
 diffGenF :: Gen Formula
@@ -315,8 +315,8 @@ printSampleDiffs = do
 --               in collect res $ True
                  
 --                  -- case res of
---                  --   SameHead ((FormulaFix Same) :&: 
---                  --            (FormulaFix (Differ f1  
+--                  --   SameHead ((F Same) :&: 
+--                  --            (F (Differ f1  
 
 instance Functor DiffResult where
     fmap f d = case d of
@@ -331,5 +331,5 @@ instance Functor DiffResult where
 class Diffable a b where
     diff :: a -> a -> b
 
-instance Diffable Formula (FormulaFix DiffResult) where diff = diffFormula
-instance Diffable Term (TermFix DiffResult) where diff = diffTerm
+instance Diffable Formula (F DiffResult) where diff = diffFormula
+instance Diffable Term (T DiffResult) where diff = diffTerm

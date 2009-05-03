@@ -40,7 +40,7 @@ import Text.Regex.PCRE.Light.Char8
 import "logic-TPTP" Codec.TPTP
 
 
-data AFormulaComparison = OtherSame | OtherDiff String String | FormulaDiff (FormulaFix DiffResult)
+data AFormulaComparison = OtherSame | OtherDiff String String | FormulaDiff (F DiffResult)
                         
 instance Monoid AFormulaComparison where
     mempty = OtherSame
@@ -48,8 +48,8 @@ instance Monoid AFormulaComparison where
     -- keep the most interesting comparison result
     mappend OtherSame y = y
     mappend x OtherSame = x
-    mappend x@(OtherDiff _ _) y@(FormulaDiff (FormulaFix y0)) = if isSame y0 then y else x
-    mappend x@(FormulaDiff (FormulaFix x0)) y@(OtherDiff _ _) = if isSame x0 then x else y 
+    mappend x@(OtherDiff _ _) y@(FormulaDiff (F y0)) = if isSame y0 then y else x
+    mappend x@(FormulaDiff (F x0)) y@(OtherDiff _ _) = if isSame x0 then x else y 
     mappend x@(OtherDiff _ _) y@(OtherDiff _ _) = x
     mappend x@(FormulaDiff _ ) y@(FormulaDiff _ ) = x
                                                                 
@@ -64,12 +64,11 @@ instance Pretty AFormulaComparison where
      
 compareOther x y = if x==y then OtherSame else OtherDiff (show x) (show y) 
 
-diffAFormula (AFormula a b c d e) (AFormula a1 b1 c1 d1 e1) =
+diffAFormula (AFormula a b c d) (AFormula a1 b1 c1 d1) =
     mconcat [ compareOther a a1
             , compareOther b b1
             , FormulaDiff (diff c c1)
             , compareOther d d1
-            , compareOther e e1
             ]
 diffAFormula x y = compareOther x y 
                   
