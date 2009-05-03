@@ -5,8 +5,10 @@ set -e
 mkdir -p bin
 mkdir -p obj
 
-for x in Prof; do
+x=Prof
+ghc -fforce-recomp -prof -auto-all -outputdir obj -o bin/$x --make -O2 -main-is $x $x
     
-    ghc -fforce-recomp -prof -caf-all -outputdir obj -o bin/$x --make -O2 -main-is $x $x
-    
-done
+echo "Running..."
+bin/$x +RTS -P -RTS 1000
+x-www-browser "$x.prof"
+

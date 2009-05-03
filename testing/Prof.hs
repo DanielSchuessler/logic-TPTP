@@ -8,37 +8,22 @@
  -XOverlappingInstances
  -XPackageImports
  -fwarn-incomplete-patterns
+ -XNoImplicitPrelude
  #-}
 
 module Prof where
 
-import Control.Monad
-import Control.Monad.State
-import Control.Applicative((<$>),(<*>))
-import Control.Arrow
-import Text.Printf.TH
-import Data.Maybe
-import Data.List as L
-import qualified Data.ByteString as B
-import Data.Function
-import System.Process
-import System.UTF8IO
-import Control.Arrow
-import Debug.Trace
-import Prelude()
-import UTF8Prelude hiding(catch)
-import System.SimpleArgs
-import Data.Generics
-import Test.QuickCheck
-import Test.QuickCheck.Gen
-import Data.Monoid
-import Text.PrettyPrint.ANSI.Leijen
-import System.Exit
-import Text.Regex.PCRE.Light.Char8
-import System.Random
-    
-import "logic-TPTP" Codec.TPTP
-    
+import Control.Monad.State(Monad(..), Functor(..), (=<<),
+                           replicateM, unless)
+import Codec.TPTP(TPTP_Input, parse, toTPTP')
+import Test.QuickCheck(Arbitrary(arbitrary))
+import Test.QuickCheck.Gen(Gen(unGen))
+import System.SimpleArgs(Args(..))
+import UTF8Prelude(Eq((==)), GHC.Num.Num, Show(show), Bool, IO,
+                   (.), and, unlines, words, print, writeFile, fromInteger)
+import System.Random(newStdGen)
+
+   
 size = 100
     
 randomF :: IO TPTP_Input

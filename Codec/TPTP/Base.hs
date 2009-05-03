@@ -39,93 +39,117 @@ type Formula = F Identity
 -- | Basic (undecorated) terms
 type Term = T Identity
     
-    
+-- | Equivalence
+--
+-- Don't let the type context of these wrapper function confuse you :) -- the important special case is just:
+--
+-- @\(\.\<\=\>\.\) :: 'Formula' -> 'Formula' -> 'Formula'@
 (.<=>.) :: 
            (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
            (F c) -> (F c) -> F c
 x .<=>. y = (F . point) $ BinOp  x (:<=>:) y  
+  
             
-(.<~>.) :: 
-           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-           (F c) -> (F c) -> F c
-x .<~>. y = (F . point) $ BinOp  x (:<~>:) y  
-            
+-- | Implication
 (.=>.) :: 
           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
           (F c) -> (F c) -> F c
 x .=>.  y = (F . point) $ BinOp  x (:=>:)  y  
             
+-- | Reverse implication
 (.<=.) :: 
           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
           (F c) -> (F c) -> F c
 x .<=.  y = (F . point) $ BinOp  x (:<=:)  y  
             
-(.~|.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (F c) -> (F c) -> F c
-x .~|.  y = (F . point) $ BinOp  x (:~|:)  y  
-            
+-- | Disjunction/OR
 (.|.) :: 
          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
          (F c) -> (F c) -> F c
 x .|.   y = (F . point) $ BinOp  x (:|:)   y  
             
-(.~&.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (F c) -> (F c) -> F c
-x .~&.  y = (F . point) $ BinOp  x (:~&:)  y  
-            
+-- | Conjunction/AND
 (.&.) :: 
          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
          (F c) -> (F c) -> F c
 x .&.   y = (F . point) $ BinOp  x (:&:)   y  
             
+-- | XOR
+(.<~>.) :: 
+           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
+           (F c) -> (F c) -> F c
+x .<~>. y = (F . point) $ BinOp  x (:<~>:) y  
+            
+-- | NOR
+(.~|.) :: 
+          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
+          (F c) -> (F c) -> F c
+x .~|.  y = (F . point) $ BinOp  x (:~|:)  y  
+            
+            
+            
+-- | NAND
+(.~&.) :: 
+          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
+          (F c) -> (F c) -> F c
+x .~&.  y = (F . point) $ BinOp  x (:~&:)  y  
+            
+            
+-- | Negation
 (.~.) :: 
          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
          (F c) -> F c
 (.~.) x = (F . point) $ (:~:) x
           
-          
+-- | Equality
 (.=.) :: 
          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
          (T c) -> (T c) -> F c
 x .=. y   = (F . point) $ InfixPred x (:=:)   y 
             
+-- | Inequality
 (.!=.) :: 
           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
           (T c) -> (T c) -> F c
 x .!=. y  = (F . point) $ InfixPred x (:!=:) y 
             
+-- | Universal quantification
 for_all :: 
            (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
            [V] -> (F c) -> F c
 for_all vars x = (F . point) $ Quant All vars x
                  
+-- | Existential quantification
 exists :: 
           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
           [V] -> (F c) -> F c
 exists vars x = (F . point) $ Quant Exists vars x
                 
+-- | Predicate symbol application
 pApp :: 
         (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
         AtomicWord -> [T c] -> F c
 pApp x args = (F . point) $ PredApp x args
               
+-- | Variable
 var :: 
        (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
        V -> T c
 var = (T . point) . Var
       
+-- | Function symbol application (constants are encoded as nullary functions)
 fApp :: 
         (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
         AtomicWord -> [T c] -> T c
 fApp x args = (T . point) $ FunApp x args
               
+-- | Number literal
 numberLitTerm :: 
                  (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
                  Double -> T c
 numberLitTerm = (T . point) . NumberLitTerm
                 
+-- | Double-quoted string literal, called /Distinct Object/ in TPTP's grammar 
 distinctObjectTerm :: 
                       (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
                       String -> T c
@@ -138,7 +162,7 @@ infixl 5  .=. ,  .!=.
 
 -- * General decorated formulae and terms
     
--- | See <http://haskell.org/haskellwiki/Indirect_composite> for the point of the type parameters (they allow for future decorations). If you don't need decorations, you can just use 'Formula' and the wrapped constructors above.
+-- | See <http://haskell.org/haskellwiki/Indirect_composite> for the point of the type parameters (they allow for future decorations, e.g. monadic subformulae). If you don't need decorations, you can just use 'Formula' and the wrapped constructors above.
 data Formula0 term formula = 
               BinOp formula BinOp formula -- ^ Binary connective application
             | InfixPred term InfixPred term -- ^ Infix predicate application (equalities, inequalities)
@@ -153,15 +177,33 @@ data Term0 term =
             Var V -- ^ Variable
           | NumberLitTerm Double -- ^ Number literal
           | DistinctObjectTerm String -- ^ Double-quoted item
-          | FunApp AtomicWord [term] -- ^ Function symbol application (constants are nullary functions) 
+          | FunApp AtomicWord [term] -- ^ Function symbol application (constants are encoded as nullary functions) 
             deriving (Eq,Ord,Show,Read,Data,Typeable)
                      
+
+    
+-- | Formulae whose subexpressions are wrapped in the given type constructor @c@.
+--
+-- For example:
+--
+-- - @c = 'Identity'@: Plain formulae
+--
+-- - @c = 'Maybe'@: Formulae that may contain \"holes\"
+--
+-- - @c = 'IORef'@: (Mutable) formulae with mutable subexpressions 
+newtype F c = F { runF :: c (Formula0 (T c) (F c)) }
+    
+-- | Terms whose subterms are wrapped in the given type constructor @c@
+newtype T c = T { runT :: c (Term0 (T c)) }
+    
+
+
 -- | Binary formula connectives 
 data BinOp =
     -- Please don't change the constructor names (the Show instance is significant)
                (:<=>:)  -- ^ Equivalence
             |  (:=>:)  -- ^ Implication
-            |  (:<=:)  -- ^ Implication (reverse)
+            |  (:<=:)  -- ^ Reverse Implication
             |  (:&:)  -- ^ AND
             |  (:|:)  -- ^ OR
             |  (:~&:)  -- ^ NAND
@@ -231,16 +273,17 @@ data GTerm = ColonSep GData GTerm
 
 -- * Gathering free Variables
 
-class FormulaOrTerm c a where
-    elimFormulaOrTerm :: (F c -> r) -> (T c -> r) -> a -> r
+-- class FormulaOrTerm c a where
+--     elimFormulaOrTerm :: (F c -> r) -> (T c -> r) -> a -> r
 
-instance FormulaOrTerm Identity Formula where
-    elimFormulaOrTerm k _ x = k x
+-- instance FormulaOrTerm Identity Formula where
+--     elimFormulaOrTerm k _ x = k x
                               
-instance FormulaOrTerm Identity Term where
-    elimFormulaOrTerm _ k x = k x
+-- instance FormulaOrTerm Identity Term where
+--     elimFormulaOrTerm _ k x = k x
                               
 class FreeVars a where
+    -- | Obtain the free variables from a formula or term
     freeVars :: a -> Set V
 
 -- | Universally quantify all free variables in the formula
@@ -459,9 +502,9 @@ instance Arbitrary GTerm
                                   return (GList args)
                        ]
                             
--- | TPTP constant symbol/predicate symbol/function symbol identifiers (they are output in single quotes unless they are /lower_word/s). 
+-- | TPTP constant symbol\/predicate symbol\/function symbol identifiers (they are output in single quotes unless they are /lower_word/s). 
 -- 
--- Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to type /AtomicWord/ to construct an 'AtomicWord' 
+-- Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to have to type /AtomicWord/ to construct an 'AtomicWord' 
 newtype AtomicWord = AtomicWord String
     deriving (Eq,Ord,Show,Data,Typeable,Read,Monoid,IsString)
                                          
@@ -478,21 +521,6 @@ instance Arbitrary V where
     arbitrary = V <$> arbVar
         
 -- * Fixed-point style decorated formulae and terms
-
--- | For a given type constructor @c@, make the fixed point type @Y@ satisfying: 
---
--- > Y = c (Term0 Y)
---
--- (modulo newtype wrapping). See for example 'diffFormula'.
-newtype T c = T { runT :: c (Term0 (T c)) }
-    
--- | For a given type constructor @c@, make the fixed point type @X@ satisfying: 
---
--- > X = c (Formula0 Y X) 
--- > Y = c (Term0 Y)
---
--- (modulo newtype wrapping). See for example 'diffTerm'.
-newtype F c = F { runF :: c (Formula0 (T c) (F c)) }
              
              
 #define DI(X) deriving instance (X (c (Term0 (T c)))) => X (T c); deriving instance (X (c (Formula0 (T c) (F c)))) => X (F c)
@@ -516,19 +544,31 @@ deriving instance (Typeable1 c, Data (c (Term0 (T c))))  => Data (T c)
 deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
   
         
+-- | This class is used in several utility functions involving 'F' and 'T'.
+--
+-- Conceptually 'point' should be of type @a -> m a@, but we need the extra flexibility to make restricted monads like 'Set' instances. 
+--
+-- Note: We have @instance (Monad m) => Pointed a (m a)@, but Haddock currently doesn't display this.
 class Pointed a b | b -> a where
     point :: a -> b
 
 instance (Monad m) => Pointed a (m a) where
     point = return
             
+instance Ord a => Pointed a (Set a) where
+    point = S.singleton
+            
+-- | This class is used in several utility functions involving 'F' and 'T'.
+--
+-- Conceptually 'copoint' should be of type @w a -> a@, but let's keep the extra flexibility. 
 class Copointed a b | b -> a where
     copoint :: b -> a
 
 instance Copointed a (Identity a) where
     copoint (Identity x) = x
 
-                           
+-- * Utility functions
+
 unwrapF ::
             (Copointed (Formula0 (T t) (F t)) (t (Formula0 (T t) (F t)))) =>
             F t -> Formula0 (T t) (F t)
@@ -569,24 +609,24 @@ foldTerm0 kdistinct knum kvar kfunapp t =
       FunApp x y -> kfunapp x y
 
 
-                   
+-- | Eliminate formulae
 foldF ::
          (Copointed (Formula0 (T t) (F t)) (t (Formula0 (T t) (F t)))) =>
-           (F t -> r)
-         -> (Quant -> [V] -> F t -> r)
-         -> (F t -> BinOp -> F t -> r)
-         -> (T t -> InfixPred -> T t -> r)
-         -> (AtomicWord -> [T t] -> r)
-         -> F t
-         -> r
+           (F t -> r) -- ^ Handle negation
+         -> (Quant -> [V] -> F t -> r) -- ^ Handle quantification
+         -> (F t -> BinOp -> F t -> r) -- ^ Handle binary op
+         -> (T t -> InfixPred -> T t -> r) -- ^ Handle equality/inequality
+         -> (AtomicWord -> [T t] -> r) -- ^ Handle predicate symbol application
+         -> (F t -> r) -- ^ Handle formula
+         
 foldF kneg kquant kbinop kinfix kpredapp f = foldFormula0 kneg kquant kbinop kinfix kpredapp (unwrapF f)
 
+-- | Eliminate terms
 foldT ::
          (Copointed (Term0 (T t)) (t (Term0 (T t)))) =>
-           (String -> r)
-         -> (Double -> r)
-         -> (V -> r)
-         -> (AtomicWord -> [T t] -> r)
-         -> T t
-         -> r
+           (String -> r) -- ^ Handle string literal
+         -> (Double -> r) -- ^ Handle number literal
+         -> (V -> r) -- ^ Handle variable
+         -> (AtomicWord -> [T t] -> r) -- ^ Handle function symbol application
+         -> (T t -> r) -- ^ Handle term
 foldT kdistinct knum kvar kfunapp t = foldTerm0 kdistinct knum kvar kfunapp (unwrapT t)

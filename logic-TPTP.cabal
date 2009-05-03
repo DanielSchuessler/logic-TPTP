@@ -1,12 +1,12 @@
 name: logic-TPTP    
-version: 0.1
+version: 0.2.0
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
 license-file: LICENSE
 maintainer: Daniel Schüssler <daniels@community.haskell.org>
 bug-reports: mailto:daniels@community.haskell.org 
-synopsis: Import, export and other utilities for TPTP, a syntax for first-order logic
+synopsis: Import, export etc. for TPTP, a syntax for first-order logic
 description: 
  For information about the TPTP format, see <http://www.cs.miami.edu/~tptp/>.
  .
@@ -20,13 +20,13 @@ description:
  .
  - QuickCheck instances (generation of random formulae)
  .  
- - 'diff' : Get a \"formula\" which concisely represents the differences between two given formulae (equal subexpressions are truncated; so are the subexpressions of subexpressions whose heads already differ)
+ - 'diff' : Get a \"formula\" which represents the differences between two given formulae (equal subexpressions are truncated; so are the subexpressions of subexpressions whose heads already differ)
  .
  Tests passed:
  .
  - For randomly generated formulae, @parse . toTPTP == id@
  .
- - For each problem in the TPTP library (v 3.7.0.0) which doesn't contain the string \"thf(\", @parse . toTPTP . parse == parse@ 
+ - For the @.p@ files in the TPTP (v 3.7.0.0) distribution's @PROBLEMS@ subtree which don't contain the string \"thf(\", @parse . toTPTP . parse == parse@ 
  .
  Not yet implemented: The new /thf/ formula type.
  .
@@ -39,7 +39,7 @@ extra-source-files: testing/compileTests.sh
                     testing/TestImportExportRandom.hs
                     testing/TestImportExportImportFile.hs
                     testing/PrettyPrintFile.hs
-                    testing/PrettyPrintFile.hs
+                    testing/ParseRandom.hs
                     
 tested-with: GHC==6.10.2
 

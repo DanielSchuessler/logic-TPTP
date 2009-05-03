@@ -41,33 +41,40 @@ import Common
 import "logic-TPTP" Codec.TPTP
 
 
-main = diff_once_twice
+main = do
+  files <- lines `fmap` getContents
+  --print (length files)
+  print_export <- getArgs
+  forM_ files (diff_once_twice print_export)
+  exitWith ExitSuccess
          
-diff_once_twice = do
+diff_once_twice print_export infilename'  = do
   --let tmp = "/tmp/tmp.tptp"
-  (infilename',print_export) <- getArgs
   putStrLn infilename'
   input <- readFile infilename'
-  when (isThf input) $ (putStrLn . prettySimple . yellow . text $ "Skipping Thf") >> exitWith ExitSuccess
-  let once = parse input
-  let tptp = toTPTP' once
-  when print_export (putStrLn $ "new tptp = " ++tptp)
-  let twice = parse tptp
-  let dif = mconcat (zipWith diffAFormula once twice)
-  let success = (putStrLn . prettySimple . dullgreen . text $ "Ok") >> exitWith ExitSuccess
-            
-  -- case dif of 
-  --   OtherSame -> success 
-  --   FormulaDiff (F Same) -> success
-  --   _ -> do
-  --     putStrLn . prettySimple $ dif
-  --     exitWith (ExitFailure 1)
-                
-  if once==twice
-     then success
+  if (isThf input) 
+     then putStrLn . prettySimple . yellow . text $ "Skipping Thf"
      else do
-       putStrLn . prettySimple $ dif
-       exitWith (ExitFailure 1)
-       
-  
-  
+
+      let once = parse input
+      let tptp = toTPTP' once
+      when print_export (putStrLn $ "new tptp = " ++tptp)
+      let twice = parse tptp
+      let dif = mconcat (zipWith diffAFormula once twice)
+      let success = (putStrLn . prettySimple . dullgreen . text $ "Ok")
+
+      -- case dif of 
+      --   OtherSame -> success 
+      --   FormulaDiff (F Same) -> success
+      --   _ -> do
+      --     putStrLn . prettySimple $ dif
+      --     exitWith (ExitFailure 1)
+
+      if once==twice
+         then success
+         else do
+           putStrLn . prettySimple $ dif
+           exitWith (ExitFailure 1)
+
+
+
