@@ -56,11 +56,11 @@ handleAppExpr recFun newtypewrapper newtypeunwrapper constr x1 args1 x2 args2 =
                  case (x1==x2 && length args1 == length args2) of
                    True -> 
                        let
-                           rec = zipWith recFun args1 args2
+                           rec' = zipWith recFun args1 args2
                        in
-                         case all (isSame . newtypeunwrapper) rec of
+                         case all (isSame . newtypeunwrapper) rec' of
                            True -> Same
-                           False -> SameHead (constr x1 rec) 
+                           False -> SameHead (constr x1 rec') 
                                   
                    False -> 
                        Differ (constr x1 (fmap (const . newtypewrapper $ DontCare) args1))
@@ -117,11 +117,11 @@ handleUnary ::
                    
 handleUnary recFun _ newtypeunwrapper constr r1 r2 =
           let 
-              rec = recFun r1 r2
+              rec' = recFun r1 r2
           in
-            case newtypeunwrapper rec of
+            case newtypeunwrapper rec' of
               Same -> Same
-              _    -> SameHead (constr rec)
+              _    -> SameHead (constr rec')
                             
 
                  

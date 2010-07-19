@@ -1,11 +1,11 @@
 name: logic-TPTP    
-version: 0.2.0
+version: 0.2.0.1
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
 license-file: LICENSE
-maintainer: Daniel Schüssler <daniels@community.haskell.org>
-bug-reports: mailto:daniels@community.haskell.org 
+maintainer: Ahn, Ki Yung <kya@pdx.edu>
+bug-reports: mailto:daniels@community.haskell.org,kya@pdx.edu
 synopsis: Import, export etc. for TPTP, a syntax for first-order logic
 description: 
  For information about the TPTP format, see <http://www.cs.miami.edu/~tptp/>.
@@ -45,7 +45,7 @@ tested-with: GHC==6.10.2
 
 source-repository head
  type: darcs
- location: http://code.haskell.org/~daniels/logic-TPTP
+ location: http://patch-tag.com/r/kyagrd/logic-TPTP
  
  
 
