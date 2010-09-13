@@ -1,4 +1,11 @@
-{-# OPTIONS -fglasgow-exts -XStandaloneDeriving -XRecordWildCards -XNoMonomorphismRestriction -fwarn-missing-signatures -Wall #-}
+{-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
+  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
+  , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
+  , OverlappingInstances, RankNTypes
+  #-}
+
+-- {-# OPTIONS -fglasgow-exts -XStandaloneDeriving -XRecordWildCards -XNoMonomorphismRestriction -fwarn-missing-signatures -Wall #-}
 
 module Codec.TPTP.Export(toTPTP',ToTPTP(..),isLowerWord) where
     

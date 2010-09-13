@@ -1,5 +1,5 @@
 name: logic-TPTP    
-version: 0.2.0.1
+version: 0.2.0.2
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
@@ -41,7 +41,7 @@ extra-source-files: testing/compileTests.sh
                     testing/PrettyPrintFile.hs
                     testing/ParseRandom.hs
                     
-tested-with: GHC==6.10.2
+tested-with: GHC==6.12.1
 
 source-repository head
  type: darcs
@@ -50,7 +50,7 @@ source-repository head
  
 
 Library
- ghc-options:     -O2
+ ghc-options: -Wall -O2
  
  build-depends:      base >=4 
                    , array
@@ -63,13 +63,13 @@ Library
                    , mtl
  
  exposed-modules:   Codec.TPTP.Import
-                   ,Codec.TPTP.Base
-                   ,Codec.TPTP
-                   ,Codec.TPTP.Pretty
-                   ,Codec.TPTP.Export
-                   ,Codec.TPTP.Diff
+                  , Codec.TPTP.Base
+                  , Codec.TPTP
+                  , Codec.TPTP.Pretty
+                  , Codec.TPTP.Export
+                  , Codec.TPTP.Diff
  
  other-modules:
                     Lexer     
                   , Parser
-                   ,Codec.TPTP.QuickCheck
+                  , Codec.TPTP.QuickCheck

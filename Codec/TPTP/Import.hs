@@ -1,5 +1,3 @@
-{-# OPTIONS -fwarn-missing-signatures #-}
-
 module Codec.TPTP.Import(parse,parseFile
                         ,Token(..)) where
     

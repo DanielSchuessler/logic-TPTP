@@ -1,8 +1,9 @@
-{-# OPTIONS -XRecordWildCards -XCPP 
- -XDeriveDataTypeable -fglasgow-exts -XNoMonomorphismRestriction 
- -XTemplateHaskell -XGeneralizedNewtypeDeriving -Wall 
- -fno-warn-orphans -XOverlappingInstances -XUndecidableInstances 
- #-}
+{-# LANGUAGE CPP, TemplateHaskell, NoMonomorphismRestriction, RecordWildCards
+  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
+  , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
+  , OverlappingInstances
+  #-}
 
 module Codec.TPTP.Base where
     

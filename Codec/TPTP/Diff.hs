@@ -1,4 +1,9 @@
-{-# OPTIONS -fwarn-missing-signatures -XRecordWildCards -XCPP -XDeriveDataTypeable -fglasgow-exts -XNoMonomorphismRestriction -XTemplateHaskell -XUndecidableInstances -Wall -XOverloadedStrings #-}
+{-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
+  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
+  , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
+  , OverlappingInstances, OverloadedStrings, RankNTypes
+  #-}
 
 module Codec.TPTP.Diff(Diffable(..),DiffResult(..),T0Diff,F0Diff,isSame,diffGenF,diffGenT,printSampleDiffs) where
     

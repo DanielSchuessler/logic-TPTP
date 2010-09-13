@@ -1,5 +1,4 @@
 {
-{-# OPTIONS -XDeriveDataTypeable -XCPP #-}
 module Parser where
     
 import Data.Char

@@ -1,4 +1,10 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
+  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
+  , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
+  , OverlappingInstances, RankNTypes, PatternGuards
+  #-}
+
 module Codec.TPTP.QuickCheck where
     
 import Test.QuickCheck

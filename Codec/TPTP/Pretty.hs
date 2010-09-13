@@ -1,4 +1,9 @@
-{-# OPTIONS -XRecordWildCards -XCPP -XDeriveDataTypeable -XNoMonomorphismRestriction -XStandaloneDeriving -XFlexibleInstances -XGeneralizedNewtypeDeriving -fglasgow-exts #-}
+{-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
+  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
+  , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
+  , OverlappingInstances, RankNTypes, PatternGuards
+  #-}
 
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
