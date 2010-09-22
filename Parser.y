@@ -23,46 +23,46 @@ import Control.Monad.Identity
 
 
 %token
- lp                 { LP }
- rp                 { RP }
- lbra               { Lbrack }
- rbra               { Rbrack }
- comma              { Comma }
- dot                { Dot }
- star               { Star }
- plus               { Plus }
- rangle             { Rangle }
- colon              { Oper ":" }
+ tok_lp                 { LP }
+ tok_rp                 { RP }
+ tok_lbra               { Lbrack }
+ tok_rbra               { Rbrack }
+ tok_comma              { Comma }
+ tok_dot                { Dot }
+ tok_star               { Star }
+ tok_plus               { Plus }
+ tok_rangle             { Rangle }
+ tok_colon              { Oper ":" }
 
- iff                { Oper "<=>"}
- implies            { Oper "=>"}
- xor                { Oper "<~>"}
- nor                { Oper "~|"}
- nand               { Oper "~&"}
- impliedby          { Oper "<=" }
- equals             { Oper "=" }
- nequals            { Oper "!=" }
-         
- exclam             { Oper "!" }
- question           { Oper "?" }
- ampersand          { Oper "&" }
- vline              { Oper "|" }
- tilde              { Oper "~" }
-            
- fof                { LowerWord "fof" }
- cnf                { LowerWord "cnf" }
- include_           { LowerWord "include" }
- 
- single_quoted      { SingleQuoted $$ }
- distinct_object    { DoubleQuoted $$ }
- dollar_word        { DollarWord $$ }
- dollar_dollar_word { DollarDollarWord $$ }
- upper_word         { UpperWord $$ }
- lower_word         { LowerWord $$ }
- signed_integer     { SignedInt $$ }
- unsigned_integer   { UnsignedInt $$ }
- real               { Real $$ }
-            
+ tok_iff                { Oper "<=>"}
+ tok_implies            { Oper "=>"}
+ tok_xor                { Oper "<~>"}
+ tok_nor                { Oper "~|"}
+ tok_nand               { Oper "~&"}
+ tok_impliedby          { Oper "<=" }
+ tok_equals             { Oper "=" }
+ tok_nequals            { Oper "!=" }
+
+ tok_exclam             { Oper "!" }
+ tok_question           { Oper "?" }
+ tok_ampersand          { Oper "&" }
+ tok_vline              { Oper "|" }
+ tok_tilde              { Oper "~" }
+
+ tok_fof                { LowerWord "fof" }
+ tok_cnf                { LowerWord "cnf" }
+ tok_include_           { LowerWord "include" }
+
+ tok_single_quoted      { SingleQuoted $$ }
+ tok_distinct_object    { DoubleQuoted $$ }
+ tok_dollar_word        { DollarWord $$ }
+ tok_dollar_dollar_word { DollarDollarWord $$ }
+ tok_upper_word         { UpperWord $$ }
+ tok_lower_word         { LowerWord $$ }
+ tok_signed_integer     { SignedInt $$ }
+ tok_unsigned_integer   { UnsignedInt $$ }
+ tok_real               { Real $$ }
+
  comment            { CommentToken $$ }
 
      
@@ -403,11 +403,84 @@ file_name  : single_quoted {stripQuotes '\'' $1}
             
 lower_word_ :: {String}
 lower_word_ : lower_word {$1} | fof {"fof"} | cnf {"cnf"} | include_ {"include"} -- "fof" is a perfectly cromulent lower_word, but it is interpreted as a "fof" token
-                               
 
+lp                 :: {Token}
+lp                 : tok_lp                  comment_list { $1 }
+rp                 :: {Token}
+rp                 : tok_rp                  comment_list { $1 }
+lbra               :: {Token}
+lbra               : tok_lbra                comment_list { $1 }
+rbra               :: {Token}
+rbra               : tok_rbra                comment_list { $1 }
+comma              :: {Token}
+comma              : tok_comma               comment_list { $1 }
+dot                :: {Token}
+dot                : tok_dot                 comment_list { $1 }
+star               :: {Token}
+star               : tok_star                comment_list { $1 }
+plus               :: {Token}
+plus               : tok_plus                comment_list { $1 }
+rangle             :: {Token}
+rangle             : tok_rangle              comment_list { $1 }
+colon              :: {Token}
+colon              : tok_colon               comment_list { $1 }
 
+iff                :: {Token}
+iff                : tok_iff                 comment_list { $1 }
+implies            :: {Token}
+implies            : tok_implies             comment_list { $1 }
+xor                :: {Token}
+xor                : tok_xor                 comment_list { $1 }
+nor                :: {Token}
+nor                : tok_nor                 comment_list { $1 }
+nand               :: {Token}
+nand               : tok_nand                comment_list { $1 }
+impliedby          :: {Token}
+impliedby          : tok_impliedby           comment_list { $1 }
+equals             :: {Token}
+equals             : tok_equals              comment_list { $1 }
+nequals            :: {Token}
+nequals            : tok_nequals             comment_list { $1 }
 
+exclam             :: {Token}
+exclam             : tok_exclam              comment_list { $1 }
+question           :: {Token}
+question           : tok_question            comment_list { $1 }
+ampersand          :: {Token}
+ampersand          : tok_ampersand           comment_list { $1 }
+vline              :: {Token}
+vline              : tok_vline               comment_list { $1 }
+tilde              :: {Token}
+tilde              : tok_tilde               comment_list { $1 }
 
+fof                :: {Token}
+fof                : tok_fof                 comment_list { $1 }
+cnf                :: {Token}
+cnf                : tok_cnf                 comment_list { $1 }
+include_           :: {Token}
+include_           : tok_include_            comment_list { $1 }
+
+single_quoted      :: {String}
+single_quoted      : tok_single_quoted       comment_list { $1 }
+distinct_object    :: {String}
+distinct_object    : tok_distinct_object     comment_list { $1 }
+dollar_word        :: {String}
+dollar_word        : tok_dollar_word         comment_list { $1 }
+dollar_dollar_word :: {String}
+dollar_dollar_word : tok_dollar_dollar_word  comment_list { $1 }
+upper_word         :: {String}
+upper_word         : tok_upper_word          comment_list { $1 }
+lower_word         :: {String}
+lower_word         : tok_lower_word          comment_list { $1 }
+signed_integer     :: {Int}
+signed_integer     : tok_signed_integer      comment_list { $1 }
+unsigned_integer   :: {Int}
+unsigned_integer   : tok_unsigned_integer    comment_list { $1 }
+real               :: {Double}
+real               : tok_real                comment_list { $1 }
+
+comment_list :: {[String]}
+comment_list : {[]} | comment comment_list { $1 : $2 }
        
 {
 
