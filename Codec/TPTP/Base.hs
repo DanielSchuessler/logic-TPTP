@@ -30,8 +30,6 @@ deriving instance Read a => Read (Identity a)
 deriving instance Data a => Data (Identity a)
 deriving instance Typeable1 Identity
 
-    
-    
 -- * Basic undecorated formulae and terms
                    
 -- | Basic (undecorated) first-order formulae                   
@@ -39,7 +37,7 @@ type Formula = F Identity
     
 -- | Basic (undecorated) terms
 type Term = T Identity
-    
+
 -- | Equivalence
 --
 -- Don't let the type context of these wrapper function confuse you :) -- the important special case is just:
