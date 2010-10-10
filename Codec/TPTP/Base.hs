@@ -20,6 +20,7 @@ import Codec.TPTP.QuickCheck
 import Data.String
 import Data.Monoid hiding(All)
 import Control.Monad.Identity
+import Control.Monad.State
 import Data.Function
     
 -- Should be in the standard library
@@ -37,6 +38,40 @@ type Formula = F Identity
     
 -- | Basic (undecorated) terms
 type Term = T Identity
+
+-- * Formulae and terms decoreated with state
+
+-- | First-order formulae decorated with state
+type FormulaST s = F (State s)
+    
+-- | Terms decorated with state
+type TermST s = T (State s)
+
+-- | First-order formulae decorated with comments
+type FormulaC = FormulaST [String]
+
+-- | Terms decorated with comments
+type TermC = TermST [String]
+
+-- | Forget comments in formulae decoreated with comments
+forgetFC :: FormulaC -> Formula
+forgetFC (F f) = F . return $
+  case evalState f [] of
+    BinOp f1 op f2       -> BinOp (forgetFC f1) op (forgetFC f2)
+    InfixPred t1 pred t2 -> InfixPred (forgetTC t1) pred (forgetTC t1)
+    PredApp aw ts        -> PredApp aw (fmap forgetTC ts)
+    Quant quant vs f     -> Quant quant vs (forgetFC f)
+    (:~:) f              -> (:~:) (forgetFC f)
+
+-- | Forget comments in terms decoreated with comments
+forgetTC :: TermC -> Term
+forgetTC (T t) = T . return $
+  case evalState t [] of
+    Var v -> Var v
+    NumberLitTerm d -> NumberLitTerm d
+    DistinctObjectTerm s -> DistinctObjectTerm s
+    FunApp aw ts -> FunApp aw (fmap forgetTC ts)
+
 
 -- | Equivalence
 --
@@ -223,7 +258,8 @@ data Quant = All | Exists
 -- * Formula Metadata
     
 -- | A line of a TPTP file: Annotated formula, comment or include statement.
-data TPTP_Input = 
+type TPTP_Input = TPTP_Input_ Identity
+{-
     -- | Annotated formulae
     AFormula {
       name :: AtomicWord 
@@ -235,9 +271,30 @@ data TPTP_Input =
     | Include FilePath [AtomicWord]
 
     deriving (Eq,Ord,Show,Read,Data,Typeable)
-             
-             
+-}
+
+-- | generalized TPTP_Input -- problem deriving Data and Typable instance TODO
+-- other than that backward compatible
+data TPTP_Input_ c = 
+   -- | Annotated formulae
+   AFormula {
+     name :: AtomicWord 
+   , role :: Role 
+   , formula :: F c
+   , annotations :: Annotations 
+   }    
+   | Comment String
+   | Include FilePath [AtomicWord]
+
             
+deriving instance Eq (c (Formula0 (T c) (F c))) => Eq (TPTP_Input_ c)
+deriving instance Ord (c (Formula0 (T c) (F c))) => Ord (TPTP_Input_ c)
+deriving instance Show (c (Formula0 (T c) (F c))) => Show (TPTP_Input_ c)
+deriving instance Read (c (Formula0 (T c) (F c))) => Read (TPTP_Input_ c)
+-- ??? deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
+-- ??? deriving instance (Typeable1 c, Typeable (c (Formula0 (T c) (F c)))) => Typeable (TPTP_Input_ c)
+-- TODO how do I derive Data and Typeable ??????
+
 
 -- | Annotations about the formulas origin                   
 data Annotations = NoAnnotations | Annotations GTerm UsefulInfo
@@ -247,7 +304,7 @@ data Annotations = NoAnnotations | Annotations GTerm UsefulInfo
 data UsefulInfo = NoUsefulInfo | UsefulInfo [GTerm]
                   deriving (Eq,Ord,Show,Read,Data,Typeable)
                            
--- | Formula roles
+-- | Formula roles -- why isn't this newtype??
 data Role = Role { unrole :: String }
             deriving (Eq,Ord,Show,Read,Data,Typeable)
 
