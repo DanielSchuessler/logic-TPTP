@@ -74,12 +74,12 @@ TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
            
 TPTP_input  :: {TPTP_Input_ c}
 TPTP_input  : annotated_formula  {$1} 
---             | include  { $1 }
+             | include  { $1 }
              | comment { Comment $1 }
 
 annotated_formula  :: {TPTP_Input_ c}
 annotated_formula  :  fof_annotated  {$1} 
---                    | cnf_annotated  {$1}
+                    | cnf_annotated  {$1}
 
 fof_annotated  :: {TPTP_Input_ c}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
@@ -91,9 +91,8 @@ cnf_annotated  : cnf lp name  comma formula_role  comma cnf_formula  annotations
        
        
 annotations  :: { Annotations }
-annotations  :  { NoAnnotations }
--- annotations  :  comma source optional_info  { Annotations $2 $3 } 
---     | { NoAnnotations }
+annotations  :  comma source optional_info  { Annotations $2 $3 } 
+    | { NoAnnotations }
 
 formula_role  :: {Role}
 formula_role  : lower_word_ { Role $1 }
