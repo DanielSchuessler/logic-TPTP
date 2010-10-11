@@ -1,5 +1,5 @@
 {
-module Parser where
+module Parser2 where
     
 import Data.Char
 import Data.Data
@@ -11,9 +11,10 @@ import Codec.TPTP.Base
 import System.IO
 import System.IO.Unsafe
 import Control.Monad.Identity
+import Control.Monad.State
 }
 
-%name parseTPTP
+%name parseTPTPwithComment
 %tokentype { Token }
 %error { 
           
@@ -68,19 +69,19 @@ import Control.Monad.Identity
      
 %% 
 
-TPTP_file  :: {[TPTP_Input]}
+TPTP_file  :: {[TPTP_Input_ c]}
 TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
            
-TPTP_input  :: {TPTP_Input}
+TPTP_input  :: {TPTP_Input_ c}
 TPTP_input  : annotated_formula  {$1} 
-             | include  { $1 }
+--             | include  { $1 }
              | comment { Comment $1 }
 
-annotated_formula  :: {TPTP_Input}
+annotated_formula  :: {TPTP_Input_ c}
 annotated_formula  :  fof_annotated  {$1} 
-                    | cnf_annotated  {$1}
+--                    | cnf_annotated  {$1}
 
-fof_annotated  :: {TPTP_Input}
+fof_annotated  :: {TPTP_Input_ c}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
        { AFormula        $3               $5                $7           $8 }
                 
@@ -90,8 +91,9 @@ cnf_annotated  : cnf lp name  comma formula_role  comma cnf_formula  annotations
        
        
 annotations  :: { Annotations }
-annotations  :  comma source optional_info  { Annotations $2 $3 } 
-    | { NoAnnotations }
+annotations  :  { NoAnnotations }
+-- annotations  :  comma source optional_info  { Annotations $2 $3 } 
+--     | { NoAnnotations }
 
 formula_role  :: {Role}
 formula_role  : lower_word_ { Role $1 }
@@ -132,7 +134,7 @@ more_and_formula  :: {[F c]}
 more_and_formula  : {[]} | ampersand unitary_formula more_and_formula 
                    { $2 : $3 }
                    
-unitary_formula  :: {Formula}
+unitary_formula  :: {FormulaC}
 unitary_formula  :  quantified_formula  {$1}
                   | unary_formula       {$1}
                   | atomic_formula      {$1}
@@ -140,7 +142,7 @@ unitary_formula  :  quantified_formula  {$1}
                    
 quantified_formula  :: {F c}
 quantified_formula  : quantifier  lbra variable_list  rbra colon unitary_formula
-                     { $1 $3 $6 }
+                     { $1 $3 $6 `withComments` comm $5 }
 
 variable_list  :: {[V]}
 variable_list  : variable  { [$1] }
@@ -170,7 +172,7 @@ more_disjunction  :: {[F c]}
 more_disjunction  :  {[]} | vline  literal more_disjunction 
                    { $2 : $3 }
 
-literal  :: {Formula}
+literal  :: {FormulaC}
 literal  : atomic_formula  {$1} 
           | tilde atomic_formula  { (.~.) $2} 
           | fol_infix_unary  {$1}
@@ -178,10 +180,10 @@ literal  : atomic_formula  {$1}
 fol_infix_unary  :: {F c}
 fol_infix_unary  : term  infix_inequality  term  { $2 $1 $3 }
 
-quantifier :: {[V] -> Formula -> Formula}
+quantifier :: {[V] -> FormulaC -> FormulaC}
 quantifier  : exclam { for_all } | question { exists }
 
-binary_connective  :: {Formula -> Formula -> Formula}
+binary_connective  :: {FormulaC -> FormulaC -> FormulaC}
 binary_connective  : iff { (.<=>.) }
                     | implies { (.=>.) }
                     | impliedby { (.<=.) }
@@ -192,7 +194,7 @@ binary_connective  : iff { (.<=>.) }
 --- assoc_connective  : vline  
 ---                    | ampersand
                    
-unary_connective  :: {Formula -> Formula}
+unary_connective  :: {FormulaC -> FormulaC}
 unary_connective  : tilde { (.~.) }
 
 -- defined_type  :== atomic_defined_word 
@@ -206,7 +208,7 @@ atomic_formula  :  plain_atomic_formula    {$1}
                  | system_atomic_formula   {$1}
                  
 
-plain_atomic_formula  :: {Formula}
+plain_atomic_formula  :: {F c}
 plain_atomic_formula  : plain_term  { fApp2pApp $1 }
 
 -- plain_atomic_formula  :== proposition  | predicate  lp arguments  rp 
@@ -233,25 +235,25 @@ defined_infix_formula  : term  defined_infix_pred  term  { $2 $1 $3 }
 defined_infix_pred :: { T c -> T c -> F c } 
 defined_infix_pred  : infix_equality  { $1 }
 
-infix_equality  :: { Term -> Term -> Formula }
+infix_equality  :: { TermC -> TermC -> FormulaC }
 infix_equality  : equals { (.=.) }
                 
-infix_inequality  :: { Term -> Term -> Formula }
+infix_inequality  :: { TermC -> TermC -> FormulaC }
 infix_inequality  : nequals { (.!=.) }
 
-system_atomic_formula  :: {Formula} 
+system_atomic_formula  :: {F c} 
 system_atomic_formula  : system_term  {fApp2pApp $1}
 
-term  :: {Term}                        
+term  :: {TermC}                        
 term  :  function_term  {$1}
        | variable       {var $1}
        
-function_term  :: {Term}                        
+function_term  :: {TermC}
 function_term  : plain_term {$1} 
                 | defined_term  {$1}
                 | system_term {$1}
 
-plain_term  :: {Term}                        
+plain_term  :: {TermC}                        
 plain_term  :  constant                  {fApp $1 []}
              | functor  lp arguments  rp {fApp $1 $3}
               
@@ -261,19 +263,19 @@ constant  : functor {$1}
 functor  :: {AtomicWord}
 functor  : atomic_word {$1}
 
-defined_term  :: {Term}                        
+defined_term  :: {TermC}                        
 defined_term  : defined_atom {$1} 
                | defined_atomic_term {$1}
                
 
-defined_atom  :: {Term}                        
+defined_atom  :: {TermC}                        
 defined_atom  : number {numberLitTerm $1} 
                | distinct_object {distinctObjectTerm (stripQuotes '"' $1)}
                  
-defined_atomic_term :: {Term}                
+defined_atomic_term :: {T c}                
 defined_atomic_term  : defined_plain_term {$1}
                       
-defined_plain_term  :: {Term}                        
+defined_plain_term  :: {TermC}                        
 defined_plain_term  : defined_constant {fApp (AtomicWord $1) []} 
                      | defined_functor  lp arguments  rp {fApp (AtomicWord $1) $3} 
 
@@ -285,7 +287,7 @@ defined_functor  :: {String}
 defined_functor  : atomic_defined_word {$1}
 -- defined_functor  :==
 
-system_term  :: {Term} 
+system_term  :: {TermC} 
 system_term  :  system_constant  {fApp (AtomicWord $1) []}
               | system_functor  lp arguments  rp {fApp (AtomicWord $1) $3} 
 
@@ -422,8 +424,8 @@ plus               :: {Token}
 plus               : tok_plus                comment_list { $1 }
 rangle             :: {Token}
 rangle             : tok_rangle              comment_list { $1 }
-colon              :: {Token}
-colon              : tok_colon               comment_list { $1 }
+colon              :: {AToken}
+colon              : tok_colon               comment_list { AToken $1 $2 }
 
 iff                :: {Token}
 iff                : tok_iff                 comment_list { $1 }
@@ -483,6 +485,17 @@ comment_list :: {[String]}
 comment_list : {[]} | comment comment_list { $1 : $2 }
        
 {
+data AToken = AToken { tok :: Token, comm :: [String] }
+
+class Commented c where
+  withComments :: F c -> [String] -> F c
+
+instance Commented Identity where
+  withComments = const
+
+instance Commented (State [String]) where
+  withComments (F mf) s = F $ do { f <- mf; put s; return f }
+
 
 stripQuotes which (x:xs) = go xs
                       where
@@ -490,7 +503,8 @@ stripQuotes which (x:xs) = go xs
                         go ('\\':'\\':xs) = '\\':go xs
                         go ('\\':which:xs) = which:go xs
                         go (x:xs) = x:go xs
-                     
-fApp2pApp (T (Identity (FunApp x args))) = (F (Identity (PredApp x args))) 
+
+fApp2pApp (T mf) = F $ do FunApp x args <- mf
+                          return $ PredApp x args
 }
 

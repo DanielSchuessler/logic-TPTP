@@ -72,4 +72,6 @@ Library
  other-modules:
                     Lexer     
                   , Parser
+                  , Parser2
                   , Codec.TPTP.QuickCheck
+
