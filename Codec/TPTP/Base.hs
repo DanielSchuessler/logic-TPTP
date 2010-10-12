@@ -273,6 +273,9 @@ type TPTP_Input = TPTP_Input_ Identity
     deriving (Eq,Ord,Show,Read,Data,Typeable)
 -}
 
+-- | A line of a TPTP file: Annotated formula (with the comment string embbeded in the State monad ), comment or include statement
+type TPTP_Input_C = TPTP_Input_ (State [String])
+
 -- | generalized TPTP_Input -- problem deriving Data and Typable instance TODO
 -- other than that backward compatible
 data TPTP_Input_ c = 

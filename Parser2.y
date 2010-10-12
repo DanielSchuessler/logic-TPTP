@@ -234,7 +234,7 @@ defined_infix_formula  : term  defined_infix_pred  term  { $2 $1 $3 }
 defined_infix_pred :: { T c -> T c -> F c } 
 defined_infix_pred  : infix_equality  { $1 }
 
-infix_equality  :: { TermC -> TermC -> FormulaC }
+infix_equality  :: { T c -> T c -> F c }
 infix_equality  : equals { (.=.) }
                 
 infix_inequality  :: { TermC -> TermC -> FormulaC }
