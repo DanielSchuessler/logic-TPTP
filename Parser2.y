@@ -234,7 +234,7 @@ defined_infix_formula  : term  defined_infix_pred  term  { $2 $1 $3 }
 defined_infix_pred :: { T c -> T c -> F c } 
 defined_infix_pred  : infix_equality  { $1 }
 
-infix_equality  :: { T c -> T c -> F c }
+infix_equality  :: { TermC -> TermC -> FormulaC }
 infix_equality  : equals { (.=.) }
                 
 infix_inequality  :: { TermC -> TermC -> FormulaC }
@@ -345,7 +345,7 @@ useful_info  : general_list  {UsefulInfo $1}
 -- assumptions_record  :== assumptions lp [name_list ] rp 
 -- refutation  :== refutation lp file_source  rp 
 
-include :: {TPTP_Input}
+include :: {TPTP_Input_ c}
 include  : include_ lp file_name formula_selection  rp dot { Include $3 $4 } 
 
 formula_selection  :: {[AtomicWord]}
