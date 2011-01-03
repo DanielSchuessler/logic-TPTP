@@ -1,4 +1,6 @@
 {
+{-# LANGUAGE CPP #-}
+#include "../../MACROS.h"
 module Parser where
     
 import Data.Char
@@ -68,19 +70,19 @@ import Control.Monad.Identity
      
 %% 
 
-TPTP_file  :: {[TPTP_Input]}
+TPTP_file  :: {[TPTP_Input_ c]}
 TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
            
-TPTP_input  :: {TPTP_Input}
+TPTP_input  :: {TPTP_Input_ c}
 TPTP_input  : annotated_formula  {$1} 
              | include  { $1 }
              | comment { Comment $1 }
 
-annotated_formula  :: {TPTP_Input}
+annotated_formula  :: {TPTP_Input_ c}
 annotated_formula  :  fof_annotated  {$1} 
                     | cnf_annotated  {$1}
 
-fof_annotated  :: {TPTP_Input}
+fof_annotated  :: {TPTP_Input_ c}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
        { AFormula        $3               $5                $7           $8 }
                 
@@ -206,7 +208,7 @@ atomic_formula  :  plain_atomic_formula    {$1}
                  | system_atomic_formula   {$1}
                  
 
-plain_atomic_formula  :: {Formula}
+plain_atomic_formula  :: {F c}
 plain_atomic_formula  : plain_term  { fApp2pApp $1 }
 
 -- plain_atomic_formula  :== proposition  | predicate  lp arguments  rp 
@@ -239,7 +241,7 @@ infix_equality  : equals { (.=.) }
 infix_inequality  :: { Term -> Term -> Formula }
 infix_inequality  : nequals { (.!=.) }
 
-system_atomic_formula  :: {Formula} 
+system_atomic_formula  :: {F c} 
 system_atomic_formula  : system_term  {fApp2pApp $1}
 
 term  :: {Term}                        

@@ -5,6 +5,8 @@
   , OverlappingInstances
   #-}
 
+#include "../../MACROS.h"
+
 module Codec.TPTP.Base where
     
 import Data.Generics
@@ -78,115 +80,79 @@ forgetTC (T t) = T . return $
 -- Don't let the type context of these wrapper function confuse you :) -- the important special case is just:
 --
 -- @\(\.\<\=\>\.\) :: 'Formula' -> 'Formula' -> 'Formula'@
-(.<=>.) :: 
-           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-           (F c) -> (F c) -> F c
+(.<=>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .<=>. y = (F . point) $ BinOp  x (:<=>:) y  
   
             
 -- | Implication
-(.=>.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (F c) -> (F c) -> F c
+(.=>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .=>.  y = (F . point) $ BinOp  x (:=>:)  y  
             
 -- | Reverse implication
-(.<=.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (F c) -> (F c) -> F c
+(.<=.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .<=.  y = (F . point) $ BinOp  x (:<=:)  y  
             
 -- | Disjunction/OR
-(.|.) :: 
-         (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-         (F c) -> (F c) -> F c
+(.|.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .|.   y = (F . point) $ BinOp  x (:|:)   y  
             
 -- | Conjunction/AND
-(.&.) :: 
-         (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-         (F c) -> (F c) -> F c
+(.&.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .&.   y = (F . point) $ BinOp  x (:&:)   y  
             
 -- | XOR
-(.<~>.) :: 
-           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-           (F c) -> (F c) -> F c
+(.<~>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .<~>. y = (F . point) $ BinOp  x (:<~>:) y  
             
 -- | NOR
-(.~|.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (F c) -> (F c) -> F c
+(.~|.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .~|.  y = (F . point) $ BinOp  x (:~|:)  y  
             
             
             
 -- | NAND
-(.~&.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (F c) -> (F c) -> F c
+(.~&.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
 x .~&.  y = (F . point) $ BinOp  x (:~&:)  y  
             
             
 -- | Negation
-(.~.) :: 
-         (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-         (F c) -> F c
+(.~.) :: POINTED_FORMULA(c) => (F c) -> F c
 (.~.) x = (F . point) $ (:~:) x
           
 -- | Equality
-(.=.) :: 
-         (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-         (T c) -> (T c) -> F c
+(.=.) :: POINTED_FORMULA(c) => (T c) -> (T c) -> F c
 x .=. y   = (F . point) $ InfixPred x (:=:)   y 
             
 -- | Inequality
-(.!=.) :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          (T c) -> (T c) -> F c
+(.!=.) :: POINTED_FORMULA(c) => (T c) -> (T c) -> F c
 x .!=. y  = (F . point) $ InfixPred x (:!=:) y 
             
 -- | Universal quantification
-for_all :: 
-           (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-           [V] -> (F c) -> F c
+for_all :: POINTED_FORMULA(c) => [V] -> (F c) -> F c
 for_all vars x = (F . point) $ Quant All vars x
                  
 -- | Existential quantification
-exists :: 
-          (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-          [V] -> (F c) -> F c
+exists :: POINTED_FORMULA(c) => [V] -> (F c) -> F c
 exists vars x = (F . point) $ Quant Exists vars x
                 
 -- | Predicate symbol application
-pApp :: 
-        (Pointed (Formula0 (T c) (F c)) (c (Formula0 (T c) (F c)))) =>
-        AtomicWord -> [T c] -> F c
+pApp :: POINTED_FORMULA(c) => AtomicWord -> [T c] -> F c
 pApp x args = (F . point) $ PredApp x args
               
 -- | Variable
-var :: 
-       (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
-       V -> T c
+var :: POINTED_TERM(c) => V -> T c
 var = (T . point) . Var
       
 -- | Function symbol application (constants are encoded as nullary functions)
-fApp :: 
-        (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
-        AtomicWord -> [T c] -> T c
+fApp :: POINTED_TERM(c) => AtomicWord -> [T c] -> T c
 fApp x args = (T . point) $ FunApp x args
               
 -- | Number literal
-numberLitTerm :: 
-                 (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
-                 Double -> T c
+numberLitTerm :: POINTED_TERM(c) => Double -> T c
 numberLitTerm = (T . point) . NumberLitTerm
                 
 -- | Double-quoted string literal, called /Distinct Object/ in TPTP's grammar 
-distinctObjectTerm :: 
-                      (Pointed (Term0 (T c)) (c (Term0 (T c)))) =>
-                      String -> T c
+distinctObjectTerm :: POINTED_TERM(c) => String -> T c
 distinctObjectTerm = (T . point) . DistinctObjectTerm
                      
 infixl 2  .<=>. ,  .=>. ,  .<=. ,  .<~>.
