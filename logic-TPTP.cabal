@@ -1,5 +1,5 @@
 name: logic-TPTP    
-version: 0.2.0.5
+version: 0.2.0.7
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
@@ -40,8 +40,9 @@ extra-source-files: testing/compileTests.sh
                     testing/TestImportExportImportFile.hs
                     testing/PrettyPrintFile.hs
                     testing/ParseRandom.hs
-                    
-tested-with: GHC==6.12.1
+                    MACROS.h
+
+tested-with: GHC==7.0.1
 
 source-repository head
  type: darcs
@@ -56,9 +57,8 @@ Library
                    , array
                    , syb
                    , containers
-                   , haskell98
                    , ansi-wl-pprint
-                   , QuickCheck >= 2               
+                   , QuickCheck >= 2
                    , utf8-prelude
                    , mtl
  

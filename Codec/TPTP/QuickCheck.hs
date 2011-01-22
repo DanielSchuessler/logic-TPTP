@@ -13,7 +13,8 @@ import Control.Applicative
 import Data.Char
 import Data.Array.ST
 import Data.Array.IArray
-    
+import Data.Array.Base
+
 argsFreq :: (Int -> Gen a) -> Gen a
 argsFreq f = frequency [ (10,f 0)
                         , (10,f 1)
@@ -35,13 +36,13 @@ arbPartition 0 _ = return []
 arbPartition 1 n = return [n]
 arbPartition buckets n = do
   choices <- replicateM n (choose (1,buckets))
+  let uarray :: UArray Int Int
+      uarray = runSTUArray $
+        do arrr <- newArray (1,buckets) 0
+           forM_ choices (\bucket -> writeArray arrr bucket . succ =<< readArray arrr bucket)
+           return arrr
+  return $ elems uarray 
 
-  return . Data.Array.IArray.elems . runSTUArray $
-   do
-    arrr <- newArray (1,buckets) 0
-    forM_ choices (\bucket -> writeArray arrr bucket . succ =<< readArray arrr bucket)
-    return arrr
-           
 arbPrintable :: Gen [Char]
 arbPrintable = listOf (arbitrary `suchThat` printable)
                

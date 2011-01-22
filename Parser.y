@@ -86,7 +86,7 @@ fof_annotated  :: {TPTP_Input_ c}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
        { AFormula        $3               $5                $7           $8 }
                 
-cnf_annotated  :: {TPTP_Input}
+cnf_annotated  :: {TPTP_Input_ c}
 cnf_annotated  : cnf lp name  comma formula_role  comma cnf_formula  annotations  rp dot
        { AFormula          $3              $5  (univquant_free_vars $7) $8 }
        

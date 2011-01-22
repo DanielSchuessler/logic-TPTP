@@ -580,8 +580,8 @@ class Pointed a b | b -> a where
 instance (Monad m) => Pointed a (m a) where
     point = return
             
-instance Ord a => Pointed a (Set a) where
-    point = S.singleton
+-- instance Ord a => Pointed a (Set a) where
+--     point = S.singleton
             
 -- | This class is used in several utility functions involving 'F' and 'T'.
 --
