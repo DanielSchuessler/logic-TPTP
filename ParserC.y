@@ -1,5 +1,5 @@
 {
-module Parser2 where
+module ParserC where
     
 import Data.Char
 import Data.Data

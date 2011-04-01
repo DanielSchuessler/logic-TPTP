@@ -242,8 +242,13 @@ type TPTP_Input = TPTP_Input_ Identity
 -- | A line of a TPTP file: Annotated formula (with the comment string embbeded in the State monad ), comment or include statement
 type TPTP_Input_C = TPTP_Input_ (State [String])
 
--- | generalized TPTP_Input -- problem deriving Data and Typable instance TODO
--- other than that backward compatible
+-- | Forget comments in a line of a TPTP file decoreated with comments
+forgetTIC :: TPTP_Input_C -> TPTP_Input
+forgetTIC tic@(AFormula {}) = tic { formula = forgetFC (formula tic) }
+forgetTIC (Comment s) = Comment s
+forgetTIC (Include p aws) = Include p aws
+
+-- | generalized TPTP_Input
 data TPTP_Input_ c = 
    -- | Annotated formulae
    AFormula {
@@ -260,10 +265,10 @@ deriving instance Eq (c (Formula0 (T c) (F c))) => Eq (TPTP_Input_ c)
 deriving instance Ord (c (Formula0 (T c) (F c))) => Ord (TPTP_Input_ c)
 deriving instance Show (c (Formula0 (T c) (F c))) => Show (TPTP_Input_ c)
 deriving instance Read (c (Formula0 (T c) (F c))) => Read (TPTP_Input_ c)
--- ??? deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
--- ??? deriving instance (Typeable1 c, Typeable (c (Formula0 (T c) (F c)))) => Typeable (TPTP_Input_ c)
--- TODO how do I derive Data and Typeable ??????
-
+deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
+instance Typeable1 c => Typeable (TPTP_Input_ c) where
+  typeOf ti = mkTyCon "TPTP_Input_" `mkTyConApp` [typeOf1 (runF $ formula ti)]
+              -- hopefully (runF $ formula ti) never gets evaluated
 
 -- | Annotations about the formulas origin                   
 data Annotations = NoAnnotations | Annotations GTerm UsefulInfo

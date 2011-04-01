@@ -1,5 +1,5 @@
 name: logic-TPTP    
-version: 0.2.0.7
+version: 0.2.0.8
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
@@ -72,6 +72,6 @@ Library
  other-modules:
                     Lexer     
                   , Parser
-                  , Parser2
+                  , ParserC
                   , Codec.TPTP.QuickCheck
 
