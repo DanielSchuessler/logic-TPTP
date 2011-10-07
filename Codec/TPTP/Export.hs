@@ -59,12 +59,22 @@ instance ToTPTP Role where
 instance ToTPTP Quant where
     toTPTP All = s "!"
     toTPTP Exists = s "?"
-                    
+
 instance ToTPTP InfixPred where
-    toTPTP = s . reverse . drop 1 . reverse . drop 1 . show -- {-# EVIL #-} 
-             
+    toTPTP x = case x of
+        (:=:)  -> s "="
+        (:!=:) -> s "!="
+
 instance ToTPTP BinOp where
-    toTPTP = s . reverse . drop 1 . reverse . drop 1 . show -- {-# EVIL #-}
+    toTPTP x = case x of
+        (:<=>:) -> s "<=>"
+        (:=>:)  -> s "=>"
+        (:<=:)  -> s "<="
+        (:&:)   -> s "&"
+        (:|:)   -> s "|"
+        (:~&:)  -> s "~&"
+        (:~|:)  -> s "~|"
+        (:<~>:) -> s "<~>"
 
 instance (ToTPTP f, ToTPTP t) => ToTPTP (Formula0 t f) where
     toTPTP formu = 
