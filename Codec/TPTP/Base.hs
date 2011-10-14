@@ -60,7 +60,7 @@ forgetFC :: FormulaC -> Formula
 forgetFC (F f) = F . return $
   case evalState f [] of
     BinOp f1 op f2       -> BinOp (forgetFC f1) op (forgetFC f2)
-    InfixPred t1 pred t2 -> InfixPred (forgetTC t1) pred (forgetTC t1)
+    InfixPred t1 pred_ t2 -> InfixPred (forgetTC t1) pred_ (forgetTC t2)
     PredApp aw ts        -> PredApp aw (fmap forgetTC ts)
     Quant quant vs f     -> Quant quant vs (forgetFC f)
     (:~:) f              -> (:~:) (forgetFC f)
