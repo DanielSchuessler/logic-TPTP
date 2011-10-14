@@ -2,28 +2,26 @@
   , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances
+  , OverlappingInstances, ScopedTypeVariables
   #-}
+{-# OPTIONS -Wall -fno-warn-orphans #-}
 
 #include "../../MACROS.h"
 
 module Codec.TPTP.Base where
     
-import Data.Generics
-import Data.Set as S hiding(fold)
-import Control.Applicative
---import Data.Foldable
-import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
---import Data.Foldable 
---import Test.QuickCheck.Instances
-import Test.QuickCheck hiding ((.&.))
-import Data.Char
 import Codec.TPTP.QuickCheck
-import Data.String
-import Data.Monoid hiding(All)
+import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.State
+import Data.Data
 import Data.Function
+import Data.Monoid hiding(All)
+import Data.Set as S hiding(fold)
+import Data.String
+import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
+import Test.QuickCheck hiding ((.&.))
+import Util
     
 -- Should be in the standard library
 deriving instance Eq a => Eq (Identity a)
@@ -62,8 +60,8 @@ forgetFC (F f) = F . return $
     BinOp f1 op f2       -> BinOp (forgetFC f1) op (forgetFC f2)
     InfixPred t1 pred_ t2 -> InfixPred (forgetTC t1) pred_ (forgetTC t2)
     PredApp aw ts        -> PredApp aw (fmap forgetTC ts)
-    Quant quant vs f     -> Quant quant vs (forgetFC f)
-    (:~:) f              -> (:~:) (forgetFC f)
+    Quant quant vs f_     -> Quant quant vs (forgetFC f_)
+    (:~:) f_              -> (:~:) (forgetFC f_)
 
 -- | Forget comments in terms decoreated with comments
 forgetTC :: TermC -> Term
@@ -248,7 +246,7 @@ forgetTIC tic@(AFormula {}) = tic { formula = forgetFC (formula tic) }
 forgetTIC (Comment s) = Comment s
 forgetTIC (Include p aws) = Include p aws
 
--- | generalized TPTP_Input
+-- | Generalized TPTP_Input
 data TPTP_Input_ c = 
    -- | Annotated formulae
    AFormula {
@@ -267,8 +265,7 @@ deriving instance Show (c (Formula0 (T c) (F c))) => Show (TPTP_Input_ c)
 deriving instance Read (c (Formula0 (T c) (F c))) => Read (TPTP_Input_ c)
 deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
 instance Typeable1 c => Typeable (TPTP_Input_ c) where
-  typeOf ti = mkTyCon "TPTP_Input_" `mkTyConApp` [typeOf1 (runF $ formula ti)]
-              -- hopefully (runF $ formula ti) never gets evaluated
+  typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "TPTP_Input_"
 
 -- | Annotations about the formulas origin                   
 data Annotations = NoAnnotations | Annotations GTerm UsefulInfo
@@ -383,12 +380,11 @@ instance Arbitrary UsefulInfo
 instance Arbitrary Role
     where arbitrary = Role `fmap` arbLowerWord
                
-#define TRACE(X) id
                
 instance (Arbitrary a, Arbitrary b) => Arbitrary (Formula0 a b)
 
     
-    where arbitrary = sized (\n -> TRACE("arbitrary/Formula0") go n)
+    where arbitrary = sized go
 
            where
             go 0 = flip PredApp [] `fmap` arbitrary
@@ -443,7 +439,7 @@ instance Arbitrary Quant
     where arbitrary = elements [All,Exists]
                       
 instance Arbitrary a => Arbitrary (Term0 a)
-    where arbitrary = sized (\n -> TRACE("arbitrary/Term0") go n)
+    where arbitrary = sized go
            where
 
 
@@ -561,14 +557,10 @@ DI(Show)
 DI(Read)
   
 instance Typeable1 c => Typeable (F c) where
-    typeOf =
-        let tc = mkTyCon "F"
-        in (\(F x) -> mkTyConApp tc [typeOf1 x]) 
+    typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "F"
     
 instance Typeable1 c => Typeable (T c) where
-    typeOf =
-        let tc = mkTyCon "T"
-        in (\(T x) -> mkTyConApp tc [typeOf1 x]) 
+    typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "T"
 
 deriving instance (Typeable1 c, Data (c (Term0 (T c))))  => Data (T c)
 deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
