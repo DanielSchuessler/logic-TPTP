@@ -3,6 +3,7 @@ module ParserC where
     
 import Data.Char
 import Data.Data
+import Data.Ratio
 import Control.Monad
 import Data.List as L
 import Lexer
@@ -63,6 +64,7 @@ import Control.Monad.State
  tok_signed_integer     { SignedInt $$ }
  tok_unsigned_integer   { UnsignedInt $$ }
  tok_real               { Real $$ }
+ tok_slash              { Slash }
 
  comment            { CommentToken $$ }
 
@@ -396,8 +398,14 @@ atomic_defined_word  : dollar_word{$1}
 atomic_system_word  :: {String}              
 atomic_system_word  : dollar_dollar_word{$1}
 
-number  :: {Double} -- maybe keep track of the number type that was actually parsed
-number  : real {$1} | signed_integer {fromIntegral $1} | unsigned_integer {fromIntegral $1}
+number  :: {Rational} -- maybe keep track of the number type that was actually parsed
+number  : integer {fromIntegral $1} | rational {$1} | real {$1}  
+
+integer :: {Integer}
+integer : signed_integer {$1} | unsigned_integer {$1}
+
+rational :: {Rational} 
+rational : integer tok_slash unsigned_integer {$1 % $3} 
     
 file_name  :: {String}              
 file_name  : single_quoted {stripQuotes '\'' $1}
@@ -473,11 +481,11 @@ upper_word         :: {String}
 upper_word         : tok_upper_word          comment_list { $1 }
 lower_word         :: {String}
 lower_word         : tok_lower_word          comment_list { $1 }
-signed_integer     :: {Int}
+signed_integer     :: {Integer}
 signed_integer     : tok_signed_integer      comment_list { $1 }
-unsigned_integer   :: {Int}
+unsigned_integer   :: {Integer}
 unsigned_integer   : tok_unsigned_integer    comment_list { $1 }
-real               :: {Double}
+real               :: {Rational}
 real               : tok_real                comment_list { $1 }
 
 comment_list :: {[String]}

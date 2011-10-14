@@ -4,6 +4,7 @@
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, OverloadedStrings, RankNTypes
   #-}
+{-# OPTIONS -Wall #-}
 
 module Codec.TPTP.Diff(Diffable(..),DiffResult(..),T0Diff,F0Diff,isSame,diffGenF,diffGenT,printSampleDiffs) where
     
@@ -12,10 +13,7 @@ module Codec.TPTP.Diff(Diffable(..),DiffResult(..),T0Diff,F0Diff,isSame,diffGenF
     
 import Data.Generics
 import Control.Applicative()
---import Data.Foldable
 import Prelude hiding (putStrLn)
---import Data.Foldable 
---import Test.QuickCheck.Instances
 import Test.QuickCheck hiding((.&.))
 import Data.Char()
 import Debug.Trace()

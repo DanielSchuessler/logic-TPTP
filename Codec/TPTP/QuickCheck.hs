@@ -4,7 +4,7 @@
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, RankNTypes, PatternGuards
   #-}
-
+{-# OPTIONS -Wall #-}
 module Codec.TPTP.QuickCheck where
     
 import Test.QuickCheck

@@ -1,5 +1,6 @@
 {
 module Lexer where
+import Data.Ratio
 }
 
 %wrapper "posn"
@@ -50,9 +51,10 @@ tokens :-
   "*"                                          { withPos $ const Star }
   "+"                                          { withPos $ const Plus }
   ">"                                          { withPos $ const Rangle }
-  @decimal_fraction | @decimal_exponent        { withPos (Real . read . stripPlus) }
-  $sign @decimal_natural                       { withPos (SignedInt . read . stripPlus) }
-  @decimal_natural                             { withPos (UnsignedInt . read . stripPlus) }
+  @decimal_fraction | @decimal_exponent        { withPos (Real . readDecimalFraction . stripPlus) }
+  $sign @decimal_natural                       { withPos (SignedInt . readInteger . stripPlus) }
+  @decimal_natural                             { withPos (UnsignedInt . readInteger . stripPlus) }
+  "/"                                          { withPos $ const Slash }
 
 
   
@@ -82,14 +84,49 @@ data Token =
          | Star
          | Plus
          | Rangle
-         | SignedInt Int
-         | UnsignedInt Int
-         | Real Double
+         | SignedInt Integer
+         | UnsignedInt Integer
+         | Real Rational
          | CommentToken String
+         | Slash
 	deriving (Eq,Ord,Show)
 
 -- alex defines: alexScanTokens
 
+stripPlus :: String -> String
 stripPlus ('+':xs) = xs
 stripPlus xs = xs
+
+
+readDecimalFraction :: String -> Rational
+readDecimalFraction ('-':cs) = -(readUnsignedDecimalFraction cs)
+readDecimalFraction cs = readUnsignedDecimalFraction cs
+
+readInteger :: String -> Integer
+readInteger = read
+
+
+readUnsignedDecimalFraction :: String -> Rational
+readUnsignedDecimalFraction cs = 
+    case break (=='.') cs of
+         (_,"") -> case breakExponent cs of
+                        (cs2,_:cs2') -> readIntegerRat cs2 * readExponent cs2' 
+
+         (cs1,_:cs1') -> case breakExponent cs1' of
+                            (_,"") -> readIntegerRat cs1 + readFraction cs1'
+                            (cs2,_:cs2') -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2' 
+  where
+    breakExponent = break (`elem` "Ee")
+
+    readExponent :: String -> Rational
+    readExponent = (10^^) . readInteger . stripPlus
+
+    readFraction :: String -> Rational
+    readFraction cs = readInteger cs % (10^(length cs))
+
+    readIntegerRat :: String -> Rational
+    readIntegerRat = fromIntegral . readInteger
+                    
+
+
 }

@@ -146,7 +146,7 @@ fApp :: POINTED_TERM(c) => AtomicWord -> [T c] -> T c
 fApp x args = (T . point) $ FunApp x args
               
 -- | Number literal
-numberLitTerm :: POINTED_TERM(c) => Double -> T c
+numberLitTerm :: POINTED_TERM(c) => Rational -> T c
 numberLitTerm = (T . point) . NumberLitTerm
                 
 -- | Double-quoted string literal, called /Distinct Object/ in TPTP's grammar 
@@ -173,7 +173,7 @@ data Formula0 term formula =
 -- | See <http://haskell.org/haskellwiki/Indirect_composite> for the point of the type parameters (they allow for future decorations). If you don't need decorations, you can just use 'Term' and the wrapped constructors above.
 data Term0 term =
             Var V -- ^ Variable
-          | NumberLitTerm Double -- ^ Number literal
+          | NumberLitTerm Rational -- ^ Number literal
           | DistinctObjectTerm String -- ^ Double-quoted item
           | FunApp AtomicWord [term] -- ^ Function symbol application (constants are encoded as nullary functions) 
             deriving (Eq,Ord,Show,Read,Data,Typeable)
@@ -284,7 +284,7 @@ data Role = Role { unrole :: String }
 data GData = GWord AtomicWord
                  | GApp AtomicWord [GTerm]
                  | GVar V
-                 | GNumber Double
+                 | GNumber Rational
                  | GDistinctObject String
                  | GFormulaData String Formula 
                    deriving (Eq,Ord,Show,Read,Data,Typeable)
@@ -618,7 +618,7 @@ foldFormula0 kneg kquant kbinop kinfix kpredapp f =
                       
 foldTerm0 ::
                (String -> r)
-             -> (Double -> r)
+             -> (Rational -> r)
              -> (V -> r)
              -> (AtomicWord -> [t] -> r)
              -> Term0 t
@@ -647,7 +647,7 @@ foldF kneg kquant kbinop kinfix kpredapp f = foldFormula0 kneg kquant kbinop kin
 foldT ::
          (Copointed (Term0 (T t)) (t (Term0 (T t)))) =>
            (String -> r) -- ^ Handle string literal
-         -> (Double -> r) -- ^ Handle number literal
+         -> (Rational -> r) -- ^ Handle number literal
          -> (V -> r) -- ^ Handle variable
          -> (AtomicWord -> [T t] -> r) -- ^ Handle function symbol application
          -> (T t -> r) -- ^ Handle term

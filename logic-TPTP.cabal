@@ -1,10 +1,10 @@
 name: logic-TPTP    
-version: 0.2.0.8
+version: 0.3.0.0
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
 license-file: LICENSE
-maintainer: Ahn, Ki Yung <kya@pdx.edu>
+maintainer: Ahn, Ki Yung <kya@pdx.edu>, Daniel Schüssler <daniels@community.haskell.org>
 bug-reports: mailto:daniels@community.haskell.org,kya@pdx.edu
 synopsis: Import, export etc. for TPTP, a syntax for first-order logic
 description: 
@@ -26,9 +26,9 @@ description:
  .
  - For randomly generated formulae, @parse . toTPTP == id@
  .
- - For the @.p@ files in the TPTP (v 3.7.0.0) distribution's @PROBLEMS@ subtree which don't contain the string \"thf(\", @parse . toTPTP . parse == parse@ 
+ - For all files in the TPTP (v 5.2.0) distribution's @Problems@ subtree which don't match the regex \"^(thf|tff)\(\", @parse . toTPTP . parse == parse@ 
  .
- Not yet implemented: The new /thf/ formula type.
+ Not yet implemented: The new /thf/ and /tff/ formula types.
  .
  
  
@@ -42,7 +42,7 @@ extra-source-files: testing/compileTests.sh
                     testing/ParseRandom.hs
                     MACROS.h
 
-tested-with: GHC==7.0.1
+tested-with: GHC==7.2.1
 
 source-repository head
  type: darcs

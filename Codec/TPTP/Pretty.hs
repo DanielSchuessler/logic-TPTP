@@ -15,6 +15,7 @@ import Codec.TPTP.Export
 import Text.PrettyPrint.ANSI.Leijen
 import Data.Data
 import Control.Monad.Identity
+import Data.Ratio
 
 oper :: String -> Doc
 oper = dullyellow . text
@@ -37,6 +38,8 @@ prettyargs = tupled . fmap pretty
 --                     ++ pxs
 --                     ++ [ white (text ")") ] )
 
+prational :: Rational -> Doc
+prational q = (text.show.numerator) q <> char '/' <> (text.show.denominator) q
 
 -- | Carries information about the enclosing operation (for the purpose of printing stuff without parentheses if possible).
 data WithEnclosing a = WithEnclosing Enclosing a
@@ -164,7 +167,7 @@ instance (Pretty (WithEnclosing t)) => Pretty (WithEnclosing (Term0 t)) where
     pretty (WithEnclosing _ x) =
         case x of
           Var s -> pretty s
-          NumberLitTerm d -> text (show d)
+          NumberLitTerm d -> prational d
           DistinctObjectTerm s -> cyan (dquotes (text s))
           FunApp f [] -> fsym f
           FunApp f args -> fsym f <> prettyargs (fmap (WithEnclosing EnclNothing) args)
@@ -208,7 +211,7 @@ instance Pretty UsefulInfo where
 
 instance Pretty GData where
     pretty (GWord x) = pretty x
-    pretty (GNumber x) = pretty x
+    pretty (GNumber x) = prational x
     pretty (GDistinctObject x) = cyan (dquotes (text x))
     pretty (GApp x []) = fsym x
     pretty (GApp x args) = fsym x <+> prettyargs args

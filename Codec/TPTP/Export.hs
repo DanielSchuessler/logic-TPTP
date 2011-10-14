@@ -4,13 +4,12 @@
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, RankNTypes
   #-}
-
--- {-# OPTIONS -fglasgow-exts -XStandaloneDeriving -XRecordWildCards -XNoMonomorphismRestriction -fwarn-missing-signatures -Wall #-}
-
+{-# OPTIONS -Wall #-}
 module Codec.TPTP.Export(toTPTP',ToTPTP(..),isLowerWord) where
     
 import Codec.TPTP.Base
 import Control.Monad.Identity
+import Data.Ratio
     
 -- | Convenient wrapper for 'toTPTP'
 toTPTP' :: forall a. (ToTPTP a) => a -> String
@@ -107,7 +106,7 @@ instance ToTPTP t => ToTPTP (Term0 t) where
          
              case term of 
                Var x -> toTPTP x
-               NumberLitTerm d -> shows d
+               NumberLitTerm d -> showsRational d
                DistinctObjectTerm x -> showString (tptpQuote x)
                FunApp f [] -> toTPTP f
                FunApp f args -> toTPTP f . s "(" . commaSepMap toTPTP args . s ")"
@@ -140,7 +139,7 @@ instance ToTPTP GData where
    GWord x -> toTPTP x
    GApp x args -> toTPTP x . s "(" . commaSepMap toTPTP args . s ")"
    GVar x -> toTPTP x
-   GNumber x -> shows x
+   GNumber x -> showsRational x
    GDistinctObject x -> showString (tptpQuote x)
    GFormulaData str formu -> s str . s "(" . toTPTP formu . s ")" 
  
@@ -173,3 +172,7 @@ isLowerWord str = case str of
 
 instance ToTPTP V where
     toTPTP (V x) = s x
+
+
+showsRational :: Rational -> ShowS
+showsRational q = shows (numerator q) . showChar '/' . shows (denominator q) 

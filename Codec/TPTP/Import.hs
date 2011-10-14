@@ -1,3 +1,4 @@
+{-# OPTIONS -Wall #-}
 module Codec.TPTP.Import(parse,parseFile
                         ,parseWithComment,parseWithCommentFile
                         ,Token(..)) where
