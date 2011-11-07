@@ -1,8 +1,14 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, CPP #-}
 {-# OPTIONS -Wall #-}
 module Util where
 
 import Data.Typeable
+
+#if MIN_VERSION_base(4,4,0)
+
+#else
+mkTyCon3 _ m t = mkTyCon $ m++"."++t
+#endif
 
 packageName :: String
 packageName = "logic-TPTP"

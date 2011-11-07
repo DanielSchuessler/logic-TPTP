@@ -1,5 +1,5 @@
 name: logic-TPTP    
-version: 0.3.0.0
+version: 0.3.0.1
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
@@ -43,6 +43,7 @@ extra-source-files: testing/compileTests.sh
                     MACROS.h
 
 tested-with: GHC==7.2.1
+tested-with: GHC==7.0.4
 
 source-repository head
  type: darcs
