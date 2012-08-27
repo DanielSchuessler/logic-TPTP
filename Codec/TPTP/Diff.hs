@@ -326,7 +326,7 @@ instance Functor DiffResult where
 
 
 
-class Diffable a b where
+class Diffable a b | a -> b where
     diff :: a -> a -> b
 
 instance Diffable Formula (F DiffResult) where diff = diffFormula
