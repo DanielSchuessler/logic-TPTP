@@ -41,7 +41,7 @@ type Formula = F Identity
 -- | Basic (undecorated) terms
 type Term = T Identity
 
--- * Formulae and terms decoreated with state
+-- * Formulae and terms decorated with state
 
 -- | First-order formulae decorated with state
 type FormulaST s = F (State s)
@@ -55,7 +55,7 @@ type FormulaC = FormulaST [String]
 -- | Terms decorated with comments
 type TermC = TermST [String]
 
--- | Forget comments in formulae decoreated with comments
+-- | Forget comments in formulae decorated with comments
 forgetFC :: FormulaC -> Formula
 forgetFC (F f) = F . return $
   case evalState f [] of
@@ -65,7 +65,7 @@ forgetFC (F f) = F . return $
     Quant quant vs f_     -> Quant quant vs (forgetFC f_)
     (:~:) f_              -> (:~:) (forgetFC f_)
 
--- | Forget comments in terms decoreated with comments
+-- | Forget comments in terms decorated with comments
 forgetTC :: TermC -> Term
 forgetTC (T t) = T . return $
   case evalState t [] of
@@ -229,7 +229,7 @@ type TPTP_Input = TPTP_Input_ Identity
 -- | A line of a TPTP file: Annotated formula (with the comment string embbeded in the State monad ), comment or include statement
 type TPTP_Input_C = TPTP_Input_ (State [String])
 
--- | Forget comments in a line of a TPTP file decoreated with comments
+-- | Forget comments in a line of a TPTP file decorated with comments
 forgetTIC :: TPTP_Input_C -> TPTP_Input
 forgetTIC tic@(AFormula {}) = tic { formula = forgetFC (formula tic) }
 forgetTIC (Comment s) = Comment s
