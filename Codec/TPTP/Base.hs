@@ -262,8 +262,8 @@ data Annotations = NoAnnotations | Annotations GTerm UsefulInfo
 data UsefulInfo = NoUsefulInfo | UsefulInfo [GTerm]
                   deriving (Eq,Ord,Show,Read,Data,Typeable)
                            
--- | Formula roles -- why isn't this newtype??
-data Role = Role { unrole :: String }
+-- | Formula roles
+newtype Role = Role { unrole :: String }
             deriving (Eq,Ord,Show,Read,Data,Typeable)
 
 
