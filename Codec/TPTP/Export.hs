@@ -1,5 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
-  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, RankNTypes

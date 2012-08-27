@@ -62,6 +62,7 @@ Library
                    , ansi-wl-pprint
                    , QuickCheck >= 2
                    , mtl
+                   , pointed
  
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base

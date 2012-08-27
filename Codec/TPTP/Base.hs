@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, TemplateHaskell, NoMonomorphismRestriction, RecordWildCards
-  , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
+  , StandaloneDeriving 
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, ScopedTypeVariables
@@ -22,6 +22,8 @@ import Data.String
 import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
 import Test.QuickCheck hiding ((.&.))
 import Util
+import Data.Pointed
+import Data.Copointed
     
 -- Should be in the standard library
 deriving instance Eq a => Eq (Identity a)
@@ -75,7 +77,7 @@ forgetTC (T t) = T . return $
 
 -- | Equivalence
 --
--- Don't let the type context of these wrapper function confuse you :) -- the important special case is just:
+-- Important special case:
 --
 -- @\(\.\<\=\>\.\) :: 'Formula' -> 'Formula' -> 'Formula'@
 (.<=>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
@@ -565,38 +567,14 @@ instance Typeable1 c => Typeable (T c) where
 deriving instance (Typeable1 c, Data (c (Term0 (T c))))  => Data (T c)
 deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
   
-        
--- | This class is used in several utility functions involving 'F' and 'T'.
---
--- Conceptually 'point' should be of type @a -> m a@, but we need the extra flexibility to make restricted monads like 'Set' instances. 
---
--- Note: We have @instance (Monad m) => Pointed a (m a)@, but Haddock currently doesn't display this.
-class Pointed a b | b -> a where
-    point :: a -> b
-
-instance (Monad m) => Pointed a (m a) where
-    point = return
-            
--- instance Ord a => Pointed a (Set a) where
---     point = S.singleton
-            
--- | This class is used in several utility functions involving 'F' and 'T'.
---
--- Conceptually 'copoint' should be of type @w a -> a@, but let's keep the extra flexibility. 
-class Copointed a b | b -> a where
-    copoint :: b -> a
-
-instance Copointed a (Identity a) where
-    copoint (Identity x) = x
-
 -- * Utility functions
 
 unwrapF ::
-            (Copointed (Formula0 (T t) (F t)) (t (Formula0 (T t) (F t)))) =>
+            (Copointed t) =>
             F t -> Formula0 (T t) (F t)
 unwrapF (F x) = copoint x
 unwrapT ::
-            (Copointed (Term0 (T t)) (t (Term0 (T t)))) =>
+            (Copointed t) =>
             T t -> Term0 (T t)
 unwrapT (T x) = copoint x
 
@@ -633,7 +611,7 @@ foldTerm0 kdistinct knum kvar kfunapp t =
 
 -- | Eliminate formulae
 foldF ::
-         (Copointed (Formula0 (T t) (F t)) (t (Formula0 (T t) (F t)))) =>
+         (Copointed t) =>
            (F t -> r) -- ^ Handle negation
          -> (Quant -> [V] -> F t -> r) -- ^ Handle quantification
          -> (F t -> BinOp -> F t -> r) -- ^ Handle binary op
@@ -645,7 +623,7 @@ foldF kneg kquant kbinop kinfix kpredapp f = foldFormula0 kneg kquant kbinop kin
 
 -- | Eliminate terms
 foldT ::
-         (Copointed (Term0 (T t)) (t (Term0 (T t)))) =>
+         (Copointed t) =>
            (String -> r) -- ^ Handle string literal
          -> (Rational -> r) -- ^ Handle number literal
          -> (V -> r) -- ^ Handle variable

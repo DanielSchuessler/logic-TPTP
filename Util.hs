@@ -4,9 +4,10 @@ module Util where
 
 import Data.Typeable
 
-#if MIN_VERSION_base(4,4,0)
-
-#else
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(X,Y,Z) 1
+#endif
+#if ! MIN_VERSION_base(4,4,0)
 mkTyCon3 _ m t = mkTyCon $ m++"."++t
 #endif
 
