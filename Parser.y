@@ -129,7 +129,7 @@ more_or_formula  : {[]} | vline  unitary_formula more_or_formula
                   
 and_formula  :: {F c}
 and_formula  : unitary_formula  ampersand unitary_formula  more_and_formula
-               { foldl (.&.) ($1 .&. $3) $4 }
+               { L.foldl (.&.) ($1 .&. $3) $4 }
 
 
 more_and_formula  :: {[F c]}
@@ -168,7 +168,7 @@ cnf_formula  :  lp disjunction  rp  { $2 }
                 
 disjunction  :: {F c}
 disjunction  : literal  more_disjunction 
-              { foldl (.|.) $1 $2 }
+              { L.foldl (.|.) $1 $2 }
               
 more_disjunction  :: {[F c]}
 more_disjunction  :  {[]} | vline  literal more_disjunction 
