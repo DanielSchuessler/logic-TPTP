@@ -180,19 +180,6 @@ data Term0 term =
                      
 
     
--- | Formulae whose subexpressions are wrapped in the given type constructor @c@.
---
--- For example:
---
--- - @c = 'Identity'@: Plain formulae
---
--- - @c = 'Maybe'@: Formulae that may contain \"holes\"
---
--- - @c = 'IORef'@: (Mutable) formulae with mutable subexpressions 
-newtype F c = F { runF :: c (Formula0 (T c) (F c)) }
-    
--- | Terms whose subterms are wrapped in the given type constructor @c@
-newtype T c = T { runT :: c (Term0 (T c)) }
     
 
 
@@ -548,6 +535,19 @@ instance Arbitrary V where
         
 -- * Fixed-point style decorated formulae and terms
              
+-- | Formulae whose subexpressions are wrapped in the given type constructor @c@.
+--
+-- For example:
+--
+-- - @c = 'Identity'@: Plain formulae
+--
+-- - @c = 'Maybe'@: Formulae that may contain \"holes\"
+--
+-- - @c = 'IORef'@: (Mutable) formulae with mutable subexpressions 
+newtype F c = F { runF :: c (Formula0 (T c) (F c)) }
+    
+-- | Terms whose subterms are wrapped in the given type constructor @c@
+newtype T c = T { runT :: c (Term0 (T c)) }
              
 #define DI(X) deriving instance (X (c (Term0 (T c)))) => X (T c); deriving instance (X (c (Formula0 (T c) (F c)))) => X (F c)
     
