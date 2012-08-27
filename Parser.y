@@ -121,7 +121,7 @@ assoc_binary  : or_formula  { $1 }
                  
 or_formula  :: {F c}
 or_formula  : unitary_formula   vline  unitary_formula  more_or_formula
-               { foldl (.|.) ($1 .|. $3) $4 }
+               { L.foldl (.|.) ($1 .|. $3) $4 }
              
 more_or_formula  :: {[F c]}
 more_or_formula  : {[]} | vline  unitary_formula more_or_formula 
