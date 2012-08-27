@@ -61,7 +61,6 @@ Library
                    , containers
                    , ansi-wl-pprint
                    , QuickCheck >= 2
-                   , utf8-prelude
                    , mtl
  
  exposed-modules:   Codec.TPTP.Import

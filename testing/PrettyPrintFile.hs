@@ -24,11 +24,9 @@ import Data.Set as S
 import qualified Data.ByteString as B
 import Data.Function
 import System.Process
-import System.UTF8IO
+import System.IO
 import Control.Arrow
 import Debug.Trace
-import Prelude()
-import UTF8Prelude hiding(catch)
 import System.SimpleArgs
 import Data.Generics
 import Test.QuickCheck

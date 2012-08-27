@@ -6,9 +6,7 @@ import Control.Monad
 import Data.Maybe
 import Data.List as L
 import Data.Function
-import System.UTF8IO
-import Prelude()
-import UTF8Prelude hiding(catch)
+import System.IO
 import System.SimpleArgs
 import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen

@@ -8,7 +8,6 @@
  -XOverlappingInstances
  -XPackageImports
  -fwarn-incomplete-patterns
- -XNoImplicitPrelude
  #-}
 
 module Prof where
@@ -19,8 +18,6 @@ import Codec.TPTP(TPTP_Input, parse, toTPTP')
 import Test.QuickCheck(Arbitrary(arbitrary))
 import Test.QuickCheck.Gen(Gen(unGen))
 import System.SimpleArgs(Args(..))
-import UTF8Prelude(Eq((==)), GHC.Num.Num, Show(show), Bool, IO,
-                   (.), and, unlines, words, print, writeFile, fromInteger)
 import System.Random(newStdGen)
 
    

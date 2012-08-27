@@ -12,15 +12,10 @@ module Codec.TPTP.Diff(Diffable(..),DiffResult(..),T0Diff,F0Diff,isSame,diffGenF
 -- Warning: This module is a MESS (but it seems to work :)).
     
 import Data.Generics
-import Control.Applicative()
-import Prelude hiding (putStrLn)
 import Test.QuickCheck hiding((.&.))
-import Data.Char()
-import Debug.Trace()
 import Codec.TPTP.Base
 import Codec.TPTP.Pretty
 import Text.PrettyPrint.ANSI.Leijen
-import System.UTF8IO
 import Control.Monad.Identity
     
     

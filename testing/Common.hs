@@ -6,8 +6,6 @@ module Common where
 import Control.Monad
 import Data.List as L
 import Data.Function
-import Prelude()
-import UTF8Prelude hiding(catch)
 import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen
 import Text.Regex.PCRE.Light.Char8

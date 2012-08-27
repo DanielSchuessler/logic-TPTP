@@ -3,9 +3,7 @@
 module TestImportExportRandom where
 
 import Data.Function
-import System.UTF8IO
-import Prelude()
-import UTF8Prelude hiding(catch)
+import System.IO
 import Test.QuickCheck
 import Common
 import Data.Functor.Identity
