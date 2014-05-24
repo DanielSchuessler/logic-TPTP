@@ -63,6 +63,7 @@ Library
                    , QuickCheck >= 2
                    , mtl
                    , pointed
+                   , transformers
  
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base

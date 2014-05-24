@@ -26,10 +26,12 @@ import Data.Pointed
 import Data.Copointed
     
 -- Should be in the standard library
+#if !MIN_VERSION_transformers(0,4,0)
 deriving instance Eq a => Eq (Identity a)
 deriving instance Ord a => Ord (Identity a)
 deriving instance Show a => Show (Identity a)
 deriving instance Read a => Read (Identity a)
+#endif
 deriving instance Data a => Data (Identity a)
 deriving instance Typeable1 Identity
 
