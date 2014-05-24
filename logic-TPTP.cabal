@@ -40,7 +40,6 @@ extra-source-files: testing/compileTests.sh
                     testing/TestImportExportImportFile.hs
                     testing/PrettyPrintFile.hs
                     testing/ParseRandom.hs
-                    MACROS.h
 
 tested-with: GHC==7.4.1
 tested-with: GHC==7.2.1

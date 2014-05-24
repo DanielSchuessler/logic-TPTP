@@ -1,11 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables, CPP #-}
 {-# OPTIONS -Wall #-}
 
+module Util where
+
 #ifndef MIN_VERSION_base
 #define MIN_VERSION_base(X,Y,Z) 1
 #endif
-
-module Util where
 
 #if !MIN_VERSION_base(4,7,0)
 import Data.Typeable

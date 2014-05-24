@@ -1,6 +1,4 @@
 {
-{-# LANGUAGE CPP #-}
-#include "../../MACROS.h"
 module Parser where
     
 import Data.Char

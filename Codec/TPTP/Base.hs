@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, TemplateHaskell, NoMonomorphismRestriction, RecordWildCards
+{-# LANGUAGE CPP, NoMonomorphismRestriction
   , StandaloneDeriving 
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
@@ -6,16 +6,15 @@
   #-}
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
-#include "../../MACROS.h"
+module Codec.TPTP.Base where
+
 #ifndef MIN_VERSION_transformers
 #define MIN_VERSION_transformers(a,b,c) 1
 #endif
 #ifndef MIN_VERSION_base
 #define MIN_VERSION_base(a,b,c) 1
 #endif
--- ^ Assume we are using the newest versions when using ghci without cabal
-
-module Codec.TPTP.Base where
+-- Assume we are using the newest versions when using ghci without cabal
     
 import Codec.TPTP.QuickCheck
 import Control.Applicative
@@ -96,79 +95,79 @@ forgetTC (T t) = T . return $
 -- Important special case:
 --
 -- @\(\.\<\=\>\.\) :: 'Formula' -> 'Formula' -> 'Formula'@
-(.<=>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.<=>.) :: Pointed c => (F c) -> (F c) -> F c
 x .<=>. y = (F . point) $ BinOp  x (:<=>:) y  
   
             
 -- | Implication
-(.=>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.=>.) :: Pointed c => (F c) -> (F c) -> F c
 x .=>.  y = (F . point) $ BinOp  x (:=>:)  y  
             
 -- | Reverse implication
-(.<=.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.<=.) :: Pointed c => (F c) -> (F c) -> F c
 x .<=.  y = (F . point) $ BinOp  x (:<=:)  y  
             
 -- | Disjunction/OR
-(.|.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.|.) :: Pointed c => (F c) -> (F c) -> F c
 x .|.   y = (F . point) $ BinOp  x (:|:)   y  
             
 -- | Conjunction/AND
-(.&.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.&.) :: Pointed c => (F c) -> (F c) -> F c
 x .&.   y = (F . point) $ BinOp  x (:&:)   y  
             
 -- | XOR
-(.<~>.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.<~>.) :: Pointed c => (F c) -> (F c) -> F c
 x .<~>. y = (F . point) $ BinOp  x (:<~>:) y  
             
 -- | NOR
-(.~|.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.~|.) :: Pointed c => (F c) -> (F c) -> F c
 x .~|.  y = (F . point) $ BinOp  x (:~|:)  y  
             
             
             
 -- | NAND
-(.~&.) :: POINTED_FORMULA(c) => (F c) -> (F c) -> F c
+(.~&.) :: Pointed c => (F c) -> (F c) -> F c
 x .~&.  y = (F . point) $ BinOp  x (:~&:)  y  
             
             
 -- | Negation
-(.~.) :: POINTED_FORMULA(c) => (F c) -> F c
+(.~.) :: Pointed c => (F c) -> F c
 (.~.) x = (F . point) $ (:~:) x
           
 -- | Equality
-(.=.) :: POINTED_FORMULA(c) => (T c) -> (T c) -> F c
+(.=.) :: Pointed c => (T c) -> (T c) -> F c
 x .=. y   = (F . point) $ InfixPred x (:=:)   y 
             
 -- | Inequality
-(.!=.) :: POINTED_FORMULA(c) => (T c) -> (T c) -> F c
+(.!=.) :: Pointed c => (T c) -> (T c) -> F c
 x .!=. y  = (F . point) $ InfixPred x (:!=:) y 
             
 -- | Universal quantification
-for_all :: POINTED_FORMULA(c) => [V] -> (F c) -> F c
+for_all :: Pointed c => [V] -> (F c) -> F c
 for_all vars x = (F . point) $ Quant All vars x
                  
 -- | Existential quantification
-exists :: POINTED_FORMULA(c) => [V] -> (F c) -> F c
+exists :: Pointed c => [V] -> (F c) -> F c
 exists vars x = (F . point) $ Quant Exists vars x
                 
 -- | Predicate symbol application
-pApp :: POINTED_FORMULA(c) => AtomicWord -> [T c] -> F c
+pApp :: Pointed c => AtomicWord -> [T c] -> F c
 pApp x args = (F . point) $ PredApp x args
               
 -- | Variable
-var :: POINTED_TERM(c) => V -> T c
+var :: Pointed c => V -> T c
 var = (T . point) . Var
       
 -- | Function symbol application (constants are encoded as nullary functions)
-fApp :: POINTED_TERM(c) => AtomicWord -> [T c] -> T c
+fApp :: Pointed c => AtomicWord -> [T c] -> T c
 fApp x args = (T . point) $ FunApp x args
               
 -- | Number literal
-numberLitTerm :: POINTED_TERM(c) => Rational -> T c
+numberLitTerm :: Pointed c => Rational -> T c
 numberLitTerm = (T . point) . NumberLitTerm
                 
 -- | Double-quoted string literal, called /Distinct Object/ in TPTP's grammar 
-distinctObjectTerm :: POINTED_TERM(c) => String -> T c
+distinctObjectTerm :: Pointed c => String -> T c
 distinctObjectTerm = (T . point) . DistinctObjectTerm
                      
 infixl 2  .<=>. ,  .=>. ,  .<=. ,  .<~>.

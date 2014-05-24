@@ -1,10 +1,8 @@
 {
 {-# OPTIONS -fno-warn-missing-signatures #-}
-{-# OPTIONS -fno-warn-unused-binds #-}
 {-# OPTIONS -fno-warn-unused-matches #-}
 {-# OPTIONS -fno-warn-name-shadowing #-}
 {-# OPTIONS -fno-warn-incomplete-patterns #-}
-{-# OPTIONS -fno-warn-lazy-unlifted-bindings #-}
 
 module Lexer where
 import Data.Ratio
