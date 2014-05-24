@@ -7,6 +7,13 @@
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
 #include "../../MACROS.h"
+#ifndef MIN_VERSION_transformers
+#define MIN_VERSION_transformers(a,b,c) 1
+#endif
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(a,b,c) 1
+#endif
+-- ^ Assume we are using the newest versions when using ghci without cabal
 
 module Codec.TPTP.Base where
     
@@ -21,9 +28,12 @@ import Data.Set as S hiding(fold)
 import Data.String
 import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
 import Test.QuickCheck hiding ((.&.))
-import Util
 import Data.Pointed
 import Data.Copointed
+
+#if !MIN_VERSION_base(4,7,0)
+import Util
+#endif
     
 -- Should be in the standard library
 #if !MIN_VERSION_transformers(0,4,0)
@@ -33,7 +43,11 @@ deriving instance Show a => Show (Identity a)
 deriving instance Read a => Read (Identity a)
 #endif
 deriving instance Data a => Data (Identity a)
+#if MIN_VERSION_base(4,7,0)
+deriving instance Typeable Identity
+#else
 deriving instance Typeable1 Identity
+#endif
 
 -- * Basic undecorated formulae and terms
                    
@@ -254,9 +268,16 @@ deriving instance Eq (c (Formula0 (T c) (F c))) => Eq (TPTP_Input_ c)
 deriving instance Ord (c (Formula0 (T c) (F c))) => Ord (TPTP_Input_ c)
 deriving instance Show (c (Formula0 (T c) (F c))) => Show (TPTP_Input_ c)
 deriving instance Read (c (Formula0 (T c) (F c))) => Read (TPTP_Input_ c)
+
+
+#if MIN_VERSION_base(4,7,0)
+deriving instance (Typeable c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
+deriving instance Typeable TPTP_Input_
+#else
 deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
 instance Typeable1 c => Typeable (TPTP_Input_ c) where
   typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "TPTP_Input_"
+#endif
 
 -- | Annotations about the formulas origin                   
 data Annotations = NoAnnotations | Annotations GTerm UsefulInfo
@@ -560,14 +581,22 @@ DI(Ord)
 DI(Show)
 DI(Read)
   
+#if MIN_VERSION_base(4,7,0)
+deriving instance Typeable F
+deriving instance Typeable T
+
+deriving instance (Typeable c, Data (c (Term0 (T c)))) => Data (T c)
+deriving instance (Typeable c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
+#else
 instance Typeable1 c => Typeable (F c) where
     typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "F"
     
 instance Typeable1 c => Typeable (T c) where
     typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "T"
 
-deriving instance (Typeable1 c, Data (c (Term0 (T c))))  => Data (T c)
+deriving instance (Typeable1 c, Data (c (Term0 (T c)))) => Data (T c)
 deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
+#endif
   
 -- * Utility functions
 
