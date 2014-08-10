@@ -63,6 +63,7 @@ Library
                    , mtl
                    , pointed
                    , transformers
+                   , transformers-compat >= 0.3
  
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base

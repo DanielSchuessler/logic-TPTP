@@ -29,18 +29,14 @@ import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
 import Test.QuickCheck hiding ((.&.))
 import Data.Pointed
 import Data.Copointed
+#if !MIN_VERSION_transformers(0,4,0)
+import Data.Functor.Classes() -- Import Eq,Ord,Show,Read orphan instances for Data.Functor.Identity from transformers-compat package
+#endif
 
 #if !MIN_VERSION_base(4,7,0)
 import Util
 #endif
     
--- Should be in the standard library
-#if !MIN_VERSION_transformers(0,4,0)
-deriving instance Eq a => Eq (Identity a)
-deriving instance Ord a => Ord (Identity a)
-deriving instance Show a => Show (Identity a)
-deriving instance Read a => Read (Identity a)
-#endif
 deriving instance Data a => Data (Identity a)
 #if MIN_VERSION_base(4,7,0)
 deriving instance Typeable Identity
