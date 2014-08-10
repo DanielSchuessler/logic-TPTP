@@ -5,7 +5,7 @@ build-type: Simple
 license: GPL
 license-file: LICENSE
 maintainer: Ahn, Ki Yung <kya@pdx.edu>, Daniel Schüssler <daniels@community.haskell.org>
-bug-reports: mailto:daniels@community.haskell.org,kya@pdx.edu
+bug-reports: http://github.com/DanielSchuessler/logic-TPTP/issues
 synopsis: Import, export etc. for TPTP, a syntax for first-order logic
 description: 
  For information about the TPTP format, see <http://www.cs.miami.edu/~tptp/>.
@@ -46,8 +46,8 @@ tested-with: GHC==7.2.1
 tested-with: GHC==7.0.4
 
 source-repository head
- type: darcs
- location: http://patch-tag.com/r/kyagrd/logic-TPTP
+ type: git
+ location: http://github.com/DanielSchuessler/logic-TPTP.git
  
  
 
