@@ -1,10 +1,10 @@
-{-# OPTIONS 
- -fglasgow-exts 
- -XCPP 
- -XTemplateHaskell 
- -XNamedFieldPuns 
- -XRecordWildCards 
- -XDeriveDataTypeable 
+{-# OPTIONS
+ -fglasgow-exts
+ -XCPP
+ -XTemplateHaskell
+ -XNamedFieldPuns
+ -XRecordWildCards
+ -XDeriveDataTypeable
  -XOverlappingInstances
  -XPackageImports
  -fwarn-incomplete-patterns
@@ -34,9 +34,8 @@ import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Text.Regex.PCRE.Light.Char8
-    
+
 import "logic-TPTP" Codec.TPTP
 
 
 main = putStrLn . prettySimple . parse =<< readFile =<< getArgs
-

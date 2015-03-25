@@ -6,7 +6,7 @@
   #-}
 {-# OPTIONS -Wall #-}
 module Codec.TPTP.QuickCheck where
-    
+
 import Test.QuickCheck
 import Control.Monad
 import Control.Applicative
@@ -23,10 +23,10 @@ argsFreq f = frequency [ (10,f 0)
                         , (2 ,f 4)
                         , (1, f 15)
                         ]
-              
+
 arbVar :: Gen [Char]
-arbVar = liftM2 (:) (elements "WXZY") (show <$> choose(1::Int,3))  
-        
+arbVar = liftM2 (:) (elements "WXZY") (show <$> choose(1::Int,3))
+
 -- sorry I don't feel like calculating this distribution deductively at the moment ;)
 -- | Return random partition of n items into the given number of buckets if buckets>0
 --
@@ -41,14 +41,14 @@ arbPartition buckets n = do
         do arrr <- newArray (1,buckets) 0
            forM_ choices (\bucket -> writeArray arrr bucket . succ =<< readArray arrr bucket)
            return arrr
-  return $ elems uarray 
+  return $ elems uarray
 
 arbPrintable :: Gen [Char]
 arbPrintable = listOf (arbitrary `suchThat` printable)
-               
+
 printable :: Char -> Bool
 printable x = isAscii x && isPrint x --isDigit x || isLetter x || x `elem` " _+!@#$%^&*()[]{}-=?.,;'\":/\\"
-    
+
 arbLowerWord :: Gen String
 arbLowerWord = (:) `fmap` elements ['a'..'z'] `ap` listOf (elements (['a'..'z']++['A'..'Z']++"_"))
 
@@ -56,7 +56,7 @@ arbLowerWord = (:) `fmap` elements ['a'..'z'] `ap` listOf (elements (['a'..'z']+
 arbUpperWord :: Gen String
 arbUpperWord = (:) `fmap` elements ['A'..'Z'] `ap` listOf (elements (['a'..'z']++['A'..'Z']++"_"))
 
-               
+
 arbNum :: forall a a1. (Arbitrary a, Num a) => (a -> a1) -> Gen a1
 arbNum f =
     frequency [(1,fmap f arbitrary)

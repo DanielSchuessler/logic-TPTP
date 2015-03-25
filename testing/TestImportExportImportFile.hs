@@ -12,7 +12,7 @@ import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Common
-    
+
 import "logic-TPTP" Codec.TPTP
 
 
@@ -25,13 +25,13 @@ main = do
   print_export <- getArgs
   forM_ files (diff_once_twice print_export)
   exitWith ExitSuccess
-         
+
 diff_once_twice ::  Bool -> String -> IO ()
 diff_once_twice print_export infilename'  = do
   --let tmp = "/tmp/tmp.tptp"
   putStrLn infilename'
   input <- readFile infilename'
-  case findUnsupportedFormulaType input of 
+  case findUnsupportedFormulaType input of
      Just x -> putStrLn . prettySimple . yellow . text $ ("Skipping unsupported formula type "++x)
      Nothing -> do
 
@@ -42,8 +42,8 @@ diff_once_twice print_export infilename'  = do
       let dif = mconcat (zipWith diffAFormula once twice)
       let success = (putStrLn . prettySimple . dullgreen . text $ "Ok")
 
-      -- case dif of 
-      --   OtherSame -> success 
+      -- case dif of
+      --   OtherSame -> success
       --   FormulaDiff (F Same) -> success
       --   _ -> do
       --     putStrLn . prettySimple $ dif
@@ -54,4 +54,3 @@ diff_once_twice print_export infilename'  = do
          else do
            putStrLn . prettySimple $ dif
            exitWith (ExitFailure 1)
-

@@ -26,6 +26,6 @@ getTyRep1 _ = mkTyConApp (typeRepTyCon (typeOf1 (undefined :: c ()))) []
 mkTypeOfForRank2Kind :: forall x c. Typeable1 c => String -> String -> x c -> TypeRep
 mkTypeOfForRank2Kind moduleName typeName = const tr
     where
-        tc = mkTyCon3 packageName moduleName typeName  
+        tc = mkTyCon3 packageName moduleName typeName
         tr = mkTyConApp tc [getTyRep1 (undefined :: c ())]
 #endif

@@ -1,10 +1,10 @@
-{-# OPTIONS 
- -fglasgow-exts 
- -XCPP 
- -XTemplateHaskell 
- -XNamedFieldPuns 
- -XRecordWildCards 
- -XDeriveDataTypeable 
+{-# OPTIONS
+ -fglasgow-exts
+ -XCPP
+ -XTemplateHaskell
+ -XNamedFieldPuns
+ -XRecordWildCards
+ -XDeriveDataTypeable
  -XOverlappingInstances
  -XPackageImports
  -fwarn-incomplete-patterns
@@ -34,12 +34,12 @@ import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Text.Regex.PCRE.Light.Char8
 import Common
-    
+
 import "logic-TPTP" Codec.TPTP
 
 infilename = getArgs
 parseRes = return . parse =<< readFile =<< infilename
-         
+
 --main = forever $ quickCheck prop_test_ie --iei_i
 
 --main = stressTestParser
