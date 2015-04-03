@@ -1,4 +1,4 @@
-{-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
+{-# LANGUAGE CPP, NoMonomorphismRestriction, RecordWildCards
   , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
@@ -10,6 +10,10 @@ module Codec.TPTP.Diff(Diffable(..),DiffResult(..),T0Diff,F0Diff,isSame,diffGenF
 
 
 -- Warning: This module is a MESS (but it seems to work :)).
+
+#if MIN_VERSION_base(4,8,0)
+import Prelude hiding ((<$>))
+#endif
 
 import Data.Generics
 import Test.QuickCheck hiding((.&.))
