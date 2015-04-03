@@ -37,7 +37,10 @@ import Data.Functor.Classes() -- Import Eq,Ord,Show,Read orphan instances for Da
 import Util
 #endif
 
+#if !MIN_VERSION_base(4,8,0)
 deriving instance Data a => Data (Identity a)
+#endif
+
 #if MIN_VERSION_base(4,7,0)
 deriving instance Typeable Identity
 #else
