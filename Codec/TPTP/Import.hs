@@ -22,4 +22,3 @@ parseWithComment = parseTPTPwithComment . map snd . alexScanTokens
 
 parseWithCommentFile :: FilePath -> IO [TPTP_Input_C]
 parseWithCommentFile x = parseWithComment `fmap` readFile x
-

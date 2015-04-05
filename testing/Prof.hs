@@ -1,10 +1,10 @@
-{-# OPTIONS 
- -fglasgow-exts 
- -XCPP 
- -XTemplateHaskell 
- -XNamedFieldPuns 
- -XRecordWildCards 
- -XDeriveDataTypeable 
+{-# OPTIONS
+ -fglasgow-exts
+ -XCPP
+ -XTemplateHaskell
+ -XNamedFieldPuns
+ -XRecordWildCards
+ -XDeriveDataTypeable
  -XOverlappingInstances
  -XPackageImports
  -fwarn-incomplete-patterns
@@ -20,9 +20,9 @@ import Test.QuickCheck.Gen(Gen(unGen))
 import System.SimpleArgs(Args(..))
 import System.Random(newStdGen)
 
-   
+
 size = 100
-    
+
 randomF :: IO TPTP_Input
 randomF = (\seed -> unGen arbitrary seed size) `fmap` newStdGen
 
