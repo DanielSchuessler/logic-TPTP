@@ -7,7 +7,7 @@ import Data.Ratio
 import Control.Monad
 import Data.List as L
 import Lexer
-import Data.Set as S
+import qualified Data.Set as S
 import Codec.TPTP.Base
 import System.IO
 import System.IO.Unsafe
