@@ -4,7 +4,6 @@
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, ScopedTypeVariables
   #-}
-{-# OPTIONS -Wall -fno-warn-orphans #-}
 
 module Codec.TPTP.Base where
 
@@ -30,21 +29,11 @@ import Test.QuickCheck hiding ((.&.))
 import Data.Pointed
 import Data.Copointed
 #if !MIN_VERSION_transformers(0,4,0)
-import Data.Functor.Classes() -- Import Eq,Ord,Show,Read orphan instances for Data.Functor.Identity from transformers-compat package
+import Control.Monad.Trans.Instances () -- Import Eq,Ord,Show,Read,Data,Typeable orphan instances for Data.Functor.Identity from transformers-compat package
 #endif
 
 #if !MIN_VERSION_base(4,7,0)
 import Util
-#endif
-
-#if !MIN_VERSION_base(4,8,0)
-deriving instance Data a => Data (Identity a)
-#endif
-
-#if MIN_VERSION_base(4,7,0)
-deriving instance Typeable Identity
-#else
-deriving instance Typeable1 Identity
 #endif
 
 -- * Basic undecorated formulae and terms

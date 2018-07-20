@@ -16,23 +16,23 @@ $numeric = 0-9
 $non_zero_numeric = 1-9
 $lower_alpha = a-z
 $upper_alpha = A-Z
-$alpha_numeric =  [$lower_alpha$upper_alpha$numeric\_] 
+$alpha_numeric =  [$lower_alpha$upper_alpha$numeric\_]
 $dollar = \$
 $printable_char = .
 $viewable_char = [$printable_char\n]
-               
-    
-@not_star_slash = ( ([\n] | [^\*]) * ("*"+) ([\n] | [^\/\*]) )* ([\n] | [^\*])*
-@sq_char = [^\\\'] | [\\][\\\']  
-@do_char = [^\\\"] | [\\][\\\"] 
 
-@decimal_natural = [0]| $non_zero_numeric $numeric* 
+
+@not_star_slash = ( ([\n] | [^\*]) * ("*"+) ([\n] | [^\/\*]) )* ([\n] | [^\*])*
+@sq_char = [^\\\'] | [\\][\\\']
+@do_char = [^\\\"] | [\\][\\\"]
+
+@decimal_natural = [0]| $non_zero_numeric $numeric*
 @signed_decimal = $sign @decimal_natural
-@decimal = @signed_decimal | @decimal_natural 
+@decimal = @signed_decimal | @decimal_natural
 @dot_decimal = "." $numeric $numeric*
 @decimal_fraction = @decimal @dot_decimal
 @decimal_exponent = ( @decimal | @decimal_fraction ) $exponent @decimal
-               
+
 
 tokens :-
 
@@ -46,7 +46,7 @@ tokens :-
       |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos $ Oper }
   "."                                          { withPos $ const Dot }
   ("%"|"#")$printable_char*                    { withPos $ CommentToken } -- comment line
-  "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken } -- comment block 
+  "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken } -- comment block
   [\'] @sq_char* [\']                          { withPos SingleQuoted }
   [\"] @do_char* [\"]                          { withPos DoubleQuoted }
   $dollar $dollar $lower_alpha $alpha_numeric* { withPos DollarDollarWord }
@@ -62,8 +62,8 @@ tokens :-
   "/"                                          { withPos $ const Slash }
 
 
-  
-  
+
+
 
 
 {
@@ -72,17 +72,17 @@ tokens :-
 withPos f pos s = (pos, f s)
 
 -- The token type:
-data Token = 
-           LP 
-         | RP 
-         | Comma 
-         | Dot 
-         | Lbrack 
+data Token =
+           LP
+         | RP
+         | Comma
+         | Dot
+         | Lbrack
          | Rbrack
          | Oper String
          | SingleQuoted String
          | DoubleQuoted String
-         | DollarWord String 
+         | DollarWord String
          | DollarDollarWord String
          | UpperWord String
          | LowerWord String
@@ -94,7 +94,7 @@ data Token =
          | Real Rational
          | CommentToken String
          | Slash
-	deriving (Eq,Ord,Show)
+    deriving (Eq,Ord,Show)
 
 -- alex defines: alexScanTokens
 
@@ -112,14 +112,14 @@ readInteger = read
 
 
 readUnsignedDecimalFraction :: String -> Rational
-readUnsignedDecimalFraction cs = 
+readUnsignedDecimalFraction cs =
     case break (=='.') cs of
          (_,"") -> case breakExponent cs of
-                        (cs2,_:cs2') -> readIntegerRat cs2 * readExponent cs2' 
+                        (cs2,_:cs2') -> readIntegerRat cs2 * readExponent cs2'
 
          (cs1,_:cs1') -> case breakExponent cs1' of
                             (_,"") -> readIntegerRat cs1 + readFraction cs1'
-                            (cs2,_:cs2') -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2' 
+                            (cs2,_:cs2') -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2'
   where
     breakExponent = break (`elem` "Ee")
 
@@ -131,7 +131,7 @@ readUnsignedDecimalFraction cs =
 
     readIntegerRat :: String -> Rational
     readIntegerRat = fromIntegral . readInteger
-                    
+
 
 
 }

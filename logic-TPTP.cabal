@@ -1,5 +1,5 @@
 name: logic-TPTP
-version: 0.4.3.0
+version: 0.4.5.0
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
@@ -64,7 +64,7 @@ Library
                    , mtl
                    , pointed
                    , transformers
-                   , transformers-compat >= 0.3
+                   , transformers-compat >= 0.5
 
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base
@@ -80,4 +80,4 @@ Library
                   , Codec.TPTP.QuickCheck
                   , Util
 
- build-tools: alex, happy
+ build-tools: alex >= 3.1.1, happy >= 1.19.1
