@@ -62,6 +62,7 @@ Library
                    , QuickCheck >= 2
                    , mtl
                    , pointed
+                   , semigroups
                    , transformers
                    , transformers-compat >= 0.5
 
