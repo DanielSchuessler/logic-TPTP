@@ -511,6 +511,7 @@ stripQuotes which (x:xs) = go xs
                         go ('\\':which:xs) = which:go xs
                         go (x:xs) = x:go xs
 
-fApp2pApp (T mf) = F $ do FunApp x args <- mf
-                          return $ PredApp x args
+fApp2pApp (T mf) = F $ do x <- mf
+                          case x of
+                            FunApp x args -> return $ PredApp x args
 }
