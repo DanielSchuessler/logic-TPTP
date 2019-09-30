@@ -70,23 +70,23 @@ import Control.Monad.Identity
 
 %%
 
-TPTP_file  :: {[TPTP_Input_ c]}
+TPTP_file  :: {[TPTP_Input]}
 TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
 
-TPTP_input  :: {TPTP_Input_ c}
+TPTP_input  :: {TPTP_Input}
 TPTP_input  : annotated_formula  {$1}
              | include  { $1 }
              | comment { Comment $1 }
 
-annotated_formula  :: {TPTP_Input_ c}
+annotated_formula  :: {TPTP_Input}
 annotated_formula  :  fof_annotated  {$1}
                     | cnf_annotated  {$1}
 
-fof_annotated  :: {TPTP_Input_ c}
+fof_annotated  :: {TPTP_Input}
 fof_annotated  : fof lp name  comma formula_role  comma fof_formula  annotations  rp dot
        { AFormula        $3               $5                $7           $8 }
 
-cnf_annotated  :: {TPTP_Input_ c}
+cnf_annotated  :: {TPTP_Input}
 cnf_annotated  : cnf lp name  comma formula_role  comma cnf_formula  annotations  rp dot
        { AFormula          $3              $5  (univquant_free_vars $7) $8 }
 
@@ -99,38 +99,38 @@ formula_role  :: {Role}
 formula_role  : lower_word_ { Role $1 }
 
 
-fof_formula  :: {F c}
+fof_formula  :: {Formula}
 fof_formula  : binary_formula  { $1 }
               | unitary_formula  { $1 }
 
-binary_formula  :: {F c}
+binary_formula  :: {Formula}
 binary_formula  : nonassoc_binary  {$1}
                  | assoc_binary  {$1}
 
-nonassoc_binary  :: {F c}
+nonassoc_binary  :: {Formula}
 nonassoc_binary  : unitary_formula  binary_connective  unitary_formula
                   { $2 $1 $3 }
 
 
-assoc_binary  :: {F c}
+assoc_binary  :: {Formula}
 assoc_binary  : or_formula  { $1 }
                | and_formula  { $1 }
 
 
-or_formula  :: {F c}
+or_formula  :: {Formula}
 or_formula  : unitary_formula   vline  unitary_formula  more_or_formula
                { L.foldl (.|.) ($1 .|. $3) $4 }
 
-more_or_formula  :: {[F c]}
+more_or_formula  :: {[Formula]}
 more_or_formula  : {[]} | vline  unitary_formula more_or_formula
                   { $2 : $3 }
 
-and_formula  :: {F c}
+and_formula  :: {Formula}
 and_formula  : unitary_formula  ampersand unitary_formula  more_and_formula
                { L.foldl (.&.) ($1 .&. $3) $4 }
 
 
-more_and_formula  :: {[F c]}
+more_and_formula  :: {[Formula]}
 more_and_formula  : {[]} | ampersand unitary_formula more_and_formula
                    { $2 : $3 }
 
@@ -140,7 +140,7 @@ unitary_formula  :  quantified_formula  {$1}
                   | atomic_formula      {$1}
                   | lp fof_formula  rp  {$2}
 
-quantified_formula  :: {F c}
+quantified_formula  :: {Formula}
 quantified_formula  : quantifier  lbra variable_list  rbra colon unitary_formula
                      { $1 $3 $6 }
 
@@ -148,7 +148,7 @@ variable_list  :: {[V]}
 variable_list  : variable  { [$1] }
                 | variable  comma variable_list  { $1 : $3 }
 
-unary_formula  :: {F c}
+unary_formula  :: {Formula}
 unary_formula  : unary_connective  unitary_formula  { $1 $2 }
                 | fol_infix_unary  { $1 }
 
@@ -159,16 +159,16 @@ unary_formula  : unary_connective  unitary_formula  { $1 $2 }
 -- cnf_formula : assoc_binary {$1}
 --             | lp assoc_binary rp {$2}
 
-cnf_formula  :: {F c}
+cnf_formula  :: {Formula}
 cnf_formula  :  lp disjunction  rp  { $2 }
               | disjunction  { $1 }
 
 
-disjunction  :: {F c}
+disjunction  :: {Formula}
 disjunction  : literal  more_disjunction
               { L.foldl (.|.) $1 $2 }
 
-more_disjunction  :: {[F c]}
+more_disjunction  :: {[Formula]}
 more_disjunction  :  {[]} | vline  literal more_disjunction
                    { $2 : $3 }
 
@@ -177,7 +177,7 @@ literal  : atomic_formula  {$1}
           | tilde atomic_formula  { (.~.) $2}
           | fol_infix_unary  {$1}
 
-fol_infix_unary  :: {F c}
+fol_infix_unary  :: {Formula}
 fol_infix_unary  : term  infix_inequality  term  { $2 $1 $3 }
 
 quantifier :: {[V] -> Formula -> Formula}
@@ -202,24 +202,24 @@ unary_connective  : tilde { (.~.) }
 -- defined_type  :== $oType | $o | $iType | $i | $tType | $real | $int
 -- system_type  :== atomic_system_word
 
-atomic_formula  :: {F c}
+atomic_formula  :: {Formula}
 atomic_formula  :  plain_atomic_formula    {$1}
                  | defined_atomic_formula  {$1}
                  | system_atomic_formula   {$1}
 
 
-plain_atomic_formula  :: {F c}
+plain_atomic_formula  :: {Formula}
 plain_atomic_formula  : plain_term  { fApp2pApp $1 }
 
 -- plain_atomic_formula  :== proposition  | predicate  lp arguments  rp
 -- proposition  :== predicate
 -- predicate  :== atomic_word
 
-defined_atomic_formula  :: {F c}
+defined_atomic_formula  :: {Formula}
 defined_atomic_formula  :  defined_plain_formula  {$1}
                          | defined_infix_formula  {$1}
 
-defined_plain_formula  :: {F c}
+defined_plain_formula  :: {Formula}
 defined_plain_formula  : defined_plain_term  {fApp2pApp $1}
 
 --defined_plain_formula  :== defined_prop  | defined_pred  lp arguments  rp
@@ -229,10 +229,10 @@ defined_plain_formula  : defined_plain_term  {fApp2pApp $1}
 --defined_pred  :== $equal
 
 
-defined_infix_formula  :: {F c}
+defined_infix_formula  :: {Formula}
 defined_infix_formula  : term  defined_infix_pred  term  { $2 $1 $3 }
 
-defined_infix_pred :: { T c -> T c -> F c }
+defined_infix_pred :: {  Term -> Term -> Formula }
 defined_infix_pred  : infix_equality  { $1 }
 
 infix_equality  :: { Term -> Term -> Formula }
@@ -241,7 +241,7 @@ infix_equality  : equals { (.=.) }
 infix_inequality  :: { Term -> Term -> Formula }
 infix_inequality  : nequals { (.!=.) }
 
-system_atomic_formula  :: {F c}
+system_atomic_formula  :: {Formula}
 system_atomic_formula  : system_term  {fApp2pApp $1}
 
 term  :: {Term}
@@ -300,7 +300,7 @@ system_functor  : atomic_system_word {$1}
 variable  :: {V}
 variable  : upper_word {V $1}
 
-arguments  :: {[T c]}
+arguments  :: {[Term]}
 arguments  : term  {[$1]}
             | term  comma arguments  { $1 : $3 }
 

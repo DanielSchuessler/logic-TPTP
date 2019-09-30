@@ -320,6 +320,13 @@ univquant_free_vars cnf =
       [] -> cnf
       vars -> for_all vars cnf
 
+-- | Universally quantify all free variables in the formula
+univquant_free_vars_FC :: FormulaC -> FormulaC
+univquant_free_vars_FC cnf =
+    case S.toList (freeVars (forgetFC cnf)) of
+      [] -> cnf
+      vars -> for_all vars cnf
+
 instance FreeVars Formula where
     freeVars = foldF
                freeVars
