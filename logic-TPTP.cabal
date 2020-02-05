@@ -1,5 +1,5 @@
 name: logic-TPTP
-version: 0.4.5.0
+version: 0.4.6.0
 cabal-version: >= 1.6
 build-type: Simple
 license: GPL
@@ -34,7 +34,6 @@ description:
 
 category: Codec,Math,Theorem Provers
 author: Daniel Schüssler
-cabal-version: >= 1.6
 extra-source-files: testing/compileTests.sh
                     testing/TestImportExportRandom.hs
                     testing/TestImportExportImportFile.hs
@@ -63,6 +62,7 @@ Library
                    , QuickCheck >= 2
                    , mtl
                    , pointed
+                   , semigroups
                    , transformers
                    , transformers-compat >= 0.5
 

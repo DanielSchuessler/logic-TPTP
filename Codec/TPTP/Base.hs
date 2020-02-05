@@ -22,6 +22,7 @@ import Control.Monad.State
 import Data.Data
 import Data.Function
 import Data.Monoid hiding(All)
+import Data.Semigroup (Semigroup)
 import Data.Set as S hiding(fold)
 import Data.String
 import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
@@ -319,6 +320,13 @@ univquant_free_vars cnf =
       [] -> cnf
       vars -> for_all vars cnf
 
+-- | Universally quantify all free variables in the formula
+univquant_free_vars_FC :: FormulaC -> FormulaC
+univquant_free_vars_FC cnf =
+    case S.toList (freeVars (forgetFC cnf)) of
+      [] -> cnf
+      vars -> for_all vars cnf
+
 instance FreeVars Formula where
     freeVars = foldF
                freeVars
@@ -531,7 +539,7 @@ instance Arbitrary GTerm
 --
 -- Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to have to type /AtomicWord/ to construct an 'AtomicWord'
 newtype AtomicWord = AtomicWord String
-    deriving (Eq,Ord,Show,Data,Typeable,Read,Monoid,IsString)
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid,IsString)
 
 instance Arbitrary AtomicWord where
     arbitrary = frequency [  (5, AtomicWord <$> arbLowerWord)
@@ -540,7 +548,7 @@ instance Arbitrary AtomicWord where
 
 -- | Variable names
 newtype V = V String
-    deriving (Eq,Ord,Show,Data,Typeable,Read,Monoid,IsString)
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid,IsString)
 
 instance Arbitrary V where
     arbitrary = V <$> arbVar
