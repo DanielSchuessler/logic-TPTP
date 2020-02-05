@@ -41,9 +41,13 @@ extra-source-files: testing/compileTests.sh
                     testing/ParseRandom.hs
                     changelog.markdown
 
-tested-with: GHC==7.4.1
-tested-with: GHC==7.2.1
-tested-with: GHC==7.0.4
+tested-with: GHC==8.8.2
+tested-with: GHC==8.6.4
+tested-with: GHC==8.4.4
+tested-with: GHC==8.2.2
+tested-with: GHC==8.0.2
+tested-with: GHC==7.10.3
+tested-with: GHC==7.8.4
 
 source-repository head
  type: git
