@@ -100,6 +100,7 @@ Executable TestImportExportImportFile
                   , semigroups
  if impl(ghc <7.10)
   build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
  if !flag(BuildTestPrograms)
   buildable: False
 
@@ -117,6 +118,7 @@ Executable TestImportExportRandom
                   , transformers-compat >= 0.5
  if impl(ghc <7.10)
   build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
  if !flag(BuildTestPrograms)
   buildable: False
 
@@ -138,6 +140,7 @@ Executable PrettyPrintFile
                   , syb
  if impl(ghc <7.10)
   build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
  if !flag(BuildTestPrograms)
   buildable: False
 
@@ -159,5 +162,6 @@ Executable ParseRandom
                   , syb
  if impl(ghc <7.10)
   build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
  if !flag(BuildTestPrograms)
   buildable: False
