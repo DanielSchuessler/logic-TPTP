@@ -1,6 +1,6 @@
 {-# OPTIONS -Wall #-}
 {-# LANGUAGE PackageImports #-}
-module TestImportExportRandom where
+module Main where
 
 import Data.Function
 import System.IO

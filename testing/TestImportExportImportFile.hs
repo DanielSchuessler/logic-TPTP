@@ -1,6 +1,6 @@
 {-# OPTIONS -Wall #-}
 {-# LANGUAGE PackageImports #-}
-module TestImportExportImportFile where
+module Main where
 
 import Control.Monad
 import Data.Maybe

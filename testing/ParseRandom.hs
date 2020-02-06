@@ -10,7 +10,7 @@
  -fwarn-incomplete-patterns
  #-}
 
-module ParseRandom where
+module Main where
 
 import Control.Monad
 import Control.Monad.State
