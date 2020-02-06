@@ -7,11 +7,11 @@ import Data.Maybe
 import Data.List as L
 import Data.Function
 import System.IO
-import System.SimpleArgs
 import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Common
+import SimpleArgs
 
 import "logic-TPTP" Codec.TPTP
 

@@ -91,6 +91,7 @@ Library
 Executable TestImportExportImportFile
  main-is:           TestImportExportImportFile.hs
  other-modules:     Common
+                  , SimpleArgs
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , base
@@ -122,6 +123,7 @@ Executable TestImportExportRandom
 Executable PrettyPrintFile
  main-is:           PrettyPrintFile.hs
  other-modules:     Common
+                  , SimpleArgs
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , ansi-wl-pprint
@@ -142,6 +144,7 @@ Executable PrettyPrintFile
 Executable ParseRandom
  main-is:           ParseRandom.hs
  other-modules:     Common
+                  , SimpleArgs
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , ansi-wl-pprint

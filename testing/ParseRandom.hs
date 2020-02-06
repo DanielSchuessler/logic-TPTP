@@ -26,7 +26,6 @@ import Data.Function
 import System.Process
 import Control.Arrow
 import Debug.Trace
-import System.SimpleArgs
 import Data.Generics
 import Test.QuickCheck
 import Data.Monoid
@@ -34,6 +33,7 @@ import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Text.Regex.PCRE.Light.Char8
 import Common
+import SimpleArgs
 
 import "logic-TPTP" Codec.TPTP
 
