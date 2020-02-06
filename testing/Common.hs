@@ -4,9 +4,6 @@
 
 module Common where
 
-import Control.Monad
-import Data.List as L
-import Data.Function
 import Data.Monoid
 import qualified Data.Semigroup as Semigroup
 import Text.PrettyPrint.ANSI.Leijen

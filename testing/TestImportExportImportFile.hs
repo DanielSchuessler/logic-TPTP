@@ -3,10 +3,6 @@
 module Main where
 
 import Control.Monad
-import Data.Maybe
-import Data.List as L
-import Data.Function
-import System.IO
 import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen
 import System.Exit

@@ -2,8 +2,6 @@
 {-# LANGUAGE PackageImports #-}
 module Main where
 
-import Data.Function
-import System.IO
 import Test.QuickCheck
 import Common
 import Data.Functor.Identity
