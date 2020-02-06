@@ -4,7 +4,7 @@ cabal-version: >= 1.6
 build-type: Simple
 license: GPL
 license-file: LICENSE
-maintainer: Ahn, Ki Yung <kya@pdx.edu>, Daniel Schüssler <daniels@community.haskell.org>
+maintainer: Ahn, Ki Yung <kya@pdx.edu>, Daniel Schüssler <daniels@community.haskell.org>, Masahiro Sakai <masahiro.sakai@gmail.com>
 bug-reports: http://github.com/DanielSchuessler/logic-TPTP/issues
 synopsis: Import, export etc. for TPTP, a syntax for first-order logic
 description:
