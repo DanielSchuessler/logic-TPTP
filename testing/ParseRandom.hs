@@ -1,14 +1,5 @@
-{-# OPTIONS
- -fglasgow-exts
- -XCPP
- -XTemplateHaskell
- -XNamedFieldPuns
- -XRecordWildCards
- -XDeriveDataTypeable
- -XOverlappingInstances
- -XPackageImports
- -fwarn-incomplete-patterns
- #-}
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+{-# LANGUAGE PackageImports #-}
 
 module Main where
 

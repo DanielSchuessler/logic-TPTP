@@ -1,4 +1,4 @@
-{-# OPTIONS -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE PackageImports #-}
 module Main where
 
