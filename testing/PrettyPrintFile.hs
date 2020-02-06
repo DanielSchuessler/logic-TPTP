@@ -16,7 +16,6 @@ import Control.Monad
 import Control.Monad.State
 import Control.Applicative((<$>),(<*>))
 import Control.Arrow
-import Text.Printf.TH
 import Data.Maybe
 import Data.List as L
 import Data.Map as M
