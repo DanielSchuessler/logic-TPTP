@@ -104,7 +104,8 @@ Executable TestImportExportImportFile
  if !flag(BuildTestPrograms)
   buildable: False
 
-Executable TestImportExportRandom
+Test-suite TestImportExportRandom
+ type:              exitcode-stdio-1.0
  main-is:           TestImportExportRandom.hs
  other-modules:     Common
  hs-source-dirs:    testing
@@ -119,8 +120,6 @@ Executable TestImportExportRandom
  if impl(ghc <7.10)
   build-depends:    pcre-light <0.4.1
  other-extensions:  CPP
- if !flag(BuildTestPrograms)
-  buildable: False
 
 Executable PrettyPrintFile
  main-is:           PrettyPrintFile.hs
