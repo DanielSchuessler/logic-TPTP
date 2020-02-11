@@ -1,22 +1,12 @@
-{-# OPTIONS
- -fglasgow-exts
- -XCPP
- -XTemplateHaskell
- -XNamedFieldPuns
- -XRecordWildCards
- -XDeriveDataTypeable
- -XOverlappingInstances
- -XPackageImports
- -fwarn-incomplete-patterns
- #-}
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+{-# LANGUAGE PackageImports #-}
 
-module PrettyPrintFile where
+module Main where
 
 import Control.Monad
 import Control.Monad.State
 import Control.Applicative((<$>),(<*>))
 import Control.Arrow
-import Text.Printf.TH
 import Data.Maybe
 import Data.List as L
 import Data.Map as M
@@ -27,7 +17,6 @@ import System.Process
 import System.IO
 import Control.Arrow
 import Debug.Trace
-import System.SimpleArgs
 import Data.Generics
 import Test.QuickCheck
 import Data.Monoid
@@ -36,6 +25,6 @@ import System.Exit
 import Text.Regex.PCRE.Light.Char8
 
 import "logic-TPTP" Codec.TPTP
-
+import SimpleArgs
 
 main = putStrLn . prettySimple . parse =<< readFile =<< getArgs

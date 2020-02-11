@@ -1,6 +1,6 @@
 name: logic-TPTP
 version: 0.4.6.0
-cabal-version: >= 1.6
+cabal-version: >= 1.8
 build-type: Simple
 license: GPL
 license-file: LICENSE
@@ -35,10 +35,6 @@ description:
 category: Codec,Math,Theorem Provers
 author: Daniel Schüssler
 extra-source-files: testing/compileTests.sh
-                    testing/TestImportExportRandom.hs
-                    testing/TestImportExportImportFile.hs
-                    testing/PrettyPrintFile.hs
-                    testing/ParseRandom.hs
                     changelog.markdown
 
 tested-with: GHC==8.8.2
@@ -53,6 +49,11 @@ source-repository head
  type: git
  location: http://github.com/DanielSchuessler/logic-TPTP.git
 
+
+Flag BuildTestPrograms
+  description: build test programs
+  default: False
+  manual: True
 
 
 Library
@@ -85,3 +86,82 @@ Library
                   , Util
 
  build-tools: alex >= 3.1.1, happy >= 1.19.1
+
+
+Executable TestImportExportImportFile
+ main-is:           TestImportExportImportFile.hs
+ other-modules:     Common
+                  , SimpleArgs
+ hs-source-dirs:    testing
+ build-depends:     logic-TPTP
+                  , base
+                  , ansi-wl-pprint
+                  , pcre-light
+                  , semigroups
+ if impl(ghc <7.10)
+  build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
+ if !flag(BuildTestPrograms)
+  buildable: False
+
+Executable TestImportExportRandom
+ main-is:           TestImportExportRandom.hs
+ other-modules:     Common
+ hs-source-dirs:    testing
+ build-depends:     logic-TPTP
+                  , base
+                  , ansi-wl-pprint
+                  , pcre-light
+                  , QuickCheck
+                  , semigroups
+                  , transformers
+                  , transformers-compat >= 0.5
+ if impl(ghc <7.10)
+  build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
+ if !flag(BuildTestPrograms)
+  buildable: False
+
+Executable PrettyPrintFile
+ main-is:           PrettyPrintFile.hs
+ other-modules:     Common
+                  , SimpleArgs
+ hs-source-dirs:    testing
+ build-depends:     logic-TPTP
+                  , ansi-wl-pprint
+                  , base
+                  , bytestring
+                  , containers
+                  , mtl
+                  , pcre-light
+                  , process
+                  , QuickCheck
+                  , semigroups
+                  , syb
+ if impl(ghc <7.10)
+  build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
+ if !flag(BuildTestPrograms)
+  buildable: False
+
+Executable ParseRandom
+ main-is:           ParseRandom.hs
+ other-modules:     Common
+                  , SimpleArgs
+ hs-source-dirs:    testing
+ build-depends:     logic-TPTP
+                  , ansi-wl-pprint
+                  , base
+                  , bytestring
+                  , containers
+                  , mtl
+                  , pcre-light
+                  , process
+                  , QuickCheck
+                  , semigroups
+                  , syb
+ if impl(ghc <7.10)
+  build-depends:    pcre-light <0.4.1
+ other-extensions:  CPP
+ if !flag(BuildTestPrograms)
+  buildable: False

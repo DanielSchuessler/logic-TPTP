@@ -1,12 +1,11 @@
-{-# OPTIONS -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Common where
 
-import Control.Monad
-import Data.List as L
-import Data.Function
 import Data.Monoid
+import qualified Data.Semigroup as Semigroup
 import Text.PrettyPrint.ANSI.Leijen
 import Text.Regex.PCRE.Light.Char8
 import Codec.TPTP
@@ -14,16 +13,20 @@ import Codec.TPTP
 
 data AFormulaComparison = OtherSame | OtherDiff String String | FormulaDiff (F DiffResult)
 
+instance Semigroup.Semigroup AFormulaComparison where
+    -- keep the most interesting comparison result
+    (<>) OtherSame y = y
+    (<>) x OtherSame = x
+    (<>) x@(OtherDiff _ _) y@(FormulaDiff (F y0)) = if isSame y0 then y else x
+    (<>) x@(FormulaDiff (F x0)) y@(OtherDiff _ _) = if isSame x0 then x else y
+    (<>) x@(OtherDiff _ _) (OtherDiff _ _) = x
+    (<>) x@(FormulaDiff _ ) (FormulaDiff _ ) = x
+
 instance Monoid AFormulaComparison where
     mempty = OtherSame
-
-    -- keep the most interesting comparison result
-    mappend OtherSame y = y
-    mappend x OtherSame = x
-    mappend x@(OtherDiff _ _) y@(FormulaDiff (F y0)) = if isSame y0 then y else x
-    mappend x@(FormulaDiff (F x0)) y@(OtherDiff _ _) = if isSame x0 then x else y
-    mappend x@(OtherDiff _ _) (OtherDiff _ _) = x
-    mappend x@(FormulaDiff _ ) (FormulaDiff _ ) = x
+#if !MIN_VERSION_base(4,11,0)
+    mappend = (Semigroup.<>)
+#endif
 
 instance Pretty AFormulaComparison where
     pretty (OtherSame) = dullgreen.text$"OtherSame"
