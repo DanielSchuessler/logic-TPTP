@@ -89,7 +89,7 @@ script:
      curl -L -o TPTP-v7.3.0.tgz http://www.tptp.org/TPTP/Distribution/TPTP-v7.3.0.tgz && mv TPTP-v7.3.0.tgz $HOME/.tptp/
    fi
    tar zxf $HOME/.tptp/TPTP-v7.3.0.tgz
-   find -H TPTP-v7.3.0/Problems -type f -name "*.p" | cabal run TestImportExportImportFile -- False
+   find -H TPTP-v7.3.0/Problems -type f -name "*.p" -size -512k | cabal run TestImportExportImportFile -- False
 
  - cabal sdist   # tests that a source-distribution can be generated
 
