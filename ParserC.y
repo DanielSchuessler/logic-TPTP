@@ -55,6 +55,10 @@ import Control.Monad.State
  tok_cnf                { LowerWord "cnf" }
  tok_include_           { LowerWord "include" }
 
+ tok_fd_fof             { DollarWord "$fof" }
+ tok_fd_cnf             { DollarWord "$cnf" }
+ tok_fd_fot             { DollarWord "$fot" }
+
  tok_single_quoted      { SingleQuoted $$ }
  tok_distinct_object    { DoubleQuoted $$ }
  tok_dollar_word        { DollarWord $$ }
@@ -373,8 +377,9 @@ general_data  :  atomic_word  { GWord $1 }
                | formula_data  { $1 }
 
 formula_data :: {GData}
-formula_data  : dollar_word lp fof_formula  rp { GFormulaData $1 $3 }
-              -- too ambiguous | dollar_word lp cnf_formula  rp { GFormulaData $1 $3 }
+formula_data  :  tok_fd_fof lp fof_formula  rp { GFormulaData "$fof" (forgetFC $3) }
+               | tok_fd_cnf lp cnf_formula  rp { GFormulaData "$cnf" (forgetFC $3) }
+               | tok_fd_fot lp term rp         { GFormulaTerm "$fot" (forgetTC $3) }
 
 general_list  :: {[GTerm]}
 general_list  : lbra rbra {[]}
