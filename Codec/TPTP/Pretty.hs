@@ -220,6 +220,7 @@ instance Pretty GData where
     pretty (GApp x []) = fsym x
     pretty (GApp x args) = fsym x <+> prettyargs args
     pretty (GFormulaData s f) = text s <> align (parens (pretty f))
+    pretty (GFormulaTerm s t) = text s <> align (parens (pretty t))
     pretty (GVar x) = pretty x
 
 instance Pretty AtomicWord where
