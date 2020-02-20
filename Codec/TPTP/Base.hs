@@ -4,7 +4,6 @@
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, ScopedTypeVariables
   #-}
-{-# OPTIONS -Wall -fno-warn-orphans #-}
 
 module Codec.TPTP.Base where
 
@@ -23,6 +22,7 @@ import Control.Monad.State
 import Data.Data
 import Data.Function
 import Data.Monoid hiding(All)
+import Data.Semigroup (Semigroup)
 import Data.Set as S hiding(fold)
 import Data.String
 import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
@@ -30,23 +30,11 @@ import Test.QuickCheck hiding ((.&.))
 import Data.Pointed
 import Data.Copointed
 #if !MIN_VERSION_transformers(0,4,0)
-import Data.Functor.Classes() -- Import Eq,Ord,Show,Read orphan instances for Data.Functor.Identity from transformers-compat package
+import Control.Monad.Trans.Instances () -- Import Eq,Ord,Show,Read,Data,Typeable orphan instances for Data.Functor.Identity from transformers-compat package
 #endif
 
 #if !MIN_VERSION_base(4,7,0)
 import Util
-#endif
-
-#if !MIN_VERSION_base(4,8,0) && !MIN_VERSION_transformers(0,5,1)
-deriving instance Data a => Data (Identity a)
-#endif
-
-#if !MIN_VERSION_base(4,8,0) && !MIN_VERSION_transformers(0,5,1)
-#if MIN_VERSION_base(4,7,0)
-deriving instance Typeable Identity
-#else
-deriving instance Typeable1 Identity
-#endif
 #endif
 
 -- * Basic undecorated formulae and terms
@@ -333,6 +321,13 @@ univquant_free_vars cnf =
       [] -> cnf
       vars -> for_all vars cnf
 
+-- | Universally quantify all free variables in the formula
+univquant_free_vars_FC :: FormulaC -> FormulaC
+univquant_free_vars_FC cnf =
+    case S.toList (freeVars (forgetFC cnf)) of
+      [] -> cnf
+      vars -> for_all vars cnf
+
 instance FreeVars Formula where
     freeVars = foldF
                freeVars
@@ -545,7 +540,7 @@ instance Arbitrary GTerm
 --
 -- Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to have to type /AtomicWord/ to construct an 'AtomicWord'
 newtype AtomicWord = AtomicWord String
-    deriving (Eq,Ord,Show,Data,Typeable,Read,Monoid,IsString)
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid,IsString)
 
 instance Arbitrary AtomicWord where
     arbitrary = frequency [  (5, AtomicWord <$> arbLowerWord)
@@ -554,7 +549,7 @@ instance Arbitrary AtomicWord where
 
 -- | Variable names
 newtype V = V String
-    deriving (Eq,Ord,Show,Data,Typeable,Read,Monoid,IsString)
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid,IsString)
 
 instance Arbitrary V where
     arbitrary = V <$> arbVar

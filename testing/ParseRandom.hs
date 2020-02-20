@@ -1,22 +1,12 @@
-{-# OPTIONS
- -fglasgow-exts
- -XCPP
- -XTemplateHaskell
- -XNamedFieldPuns
- -XRecordWildCards
- -XDeriveDataTypeable
- -XOverlappingInstances
- -XPackageImports
- -fwarn-incomplete-patterns
- #-}
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+{-# LANGUAGE PackageImports #-}
 
-module ParseRandom where
+module Main where
 
 import Control.Monad
 import Control.Monad.State
 import Control.Applicative((<$>),(<*>))
 import Control.Arrow
-import Text.Printf.TH
 import Data.Maybe
 import Data.List as L
 import Data.Map as M
@@ -26,7 +16,6 @@ import Data.Function
 import System.Process
 import Control.Arrow
 import Debug.Trace
-import System.SimpleArgs
 import Data.Generics
 import Test.QuickCheck
 import Data.Monoid
@@ -34,6 +23,7 @@ import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Text.Regex.PCRE.Light.Char8
 import Common
+import SimpleArgs
 
 import "logic-TPTP" Codec.TPTP
 

@@ -1,3 +1,11 @@
+## 0.4.6.0
+
+* Add Semigroup instances for Monoids and fix cabal-version warning (Thanks to @msakai)
+
+## 0.4.5.0
+
+* Fix compilation error with containers >=0.5.8 (Thanks to @msakai)
+
 ## 0.4.4.0
 
 * Fix compilation error with transformers >=0.5.1 and GHC <7.10 (Thanks to @msakai)

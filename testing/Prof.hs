@@ -10,7 +10,7 @@
  -fwarn-incomplete-patterns
  #-}
 
-module Prof where
+module Main where
 
 import Control.Monad.State(Monad(..), Functor(..), (=<<),
                            replicateM, unless)

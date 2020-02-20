@@ -1,9 +1,7 @@
-{-# OPTIONS -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE PackageImports #-}
-module TestImportExportRandom where
+module Main where
 
-import Data.Function
-import System.IO
 import Test.QuickCheck
 import Common
 import Data.Functor.Identity
