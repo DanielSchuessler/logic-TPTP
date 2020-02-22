@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-{-# LANGUAGE PackageImports #-}
 
 module Main where
 
@@ -24,7 +23,7 @@ import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Text.Regex.PCRE.Light.Char8
 
-import "logic-TPTP" Codec.TPTP
+import Codec.TPTP
 import SimpleArgs
 
 main = putStrLn . prettySimple . parse =<< readFile =<< getArgs

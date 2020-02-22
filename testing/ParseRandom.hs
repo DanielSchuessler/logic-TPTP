@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-{-# LANGUAGE PackageImports #-}
 
 module Main where
 
@@ -25,7 +24,7 @@ import Text.Regex.PCRE.Light.Char8
 import Common
 import SimpleArgs
 
-import "logic-TPTP" Codec.TPTP
+import Codec.TPTP
 
 infilename = getArgs
 parseRes = return . parse =<< readFile =<< infilename
