@@ -142,6 +142,7 @@ instance ToTPTP GData where
    GNumber x -> showsRational x
    GDistinctObject x -> showString (tptpQuote x)
    GFormulaData str formu -> s str . s "(" . toTPTP formu . s ")"
+   GFormulaTerm str term -> s str . s "(" . toTPTP term . s ")"
 
 tptpQuote :: [Char] -> [Char]
 tptpQuote x = "\"" ++ concatMap go x ++ "\""
