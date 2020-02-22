@@ -96,6 +96,7 @@ Executable TestImportExportImportFile
  build-depends:     logic-TPTP
                   , base
                   , ansi-wl-pprint
+                  , optparse-applicative >=0.11 && <0.16
                   , pcre-light
                   , semigroups
  if impl(ghc <7.10)

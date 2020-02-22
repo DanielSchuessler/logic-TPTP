@@ -4,13 +4,29 @@ module Main where
 
 import Control.Monad
 import Data.Monoid
-import Text.PrettyPrint.ANSI.Leijen
+import Text.PrettyPrint.ANSI.Leijen hiding ((<$>))
 import System.Exit
 import Common
-import SimpleArgs
+import Options.Applicative
 
 import "logic-TPTP" Codec.TPTP
 
+data Options
+  = Options
+  { optPrintExport :: Bool
+  }
+
+optionsParser :: Parser Options
+optionsParser = Options <$> printExportOption
+  where
+    printExportOption = argument auto
+      $  metavar "True|False"
+      <> help ("print exported result")
+
+parserInfo :: ParserInfo Options
+parserInfo = info (helper <*> optionsParser) $ mconcat
+  [ fullDesc
+  ]
 
 -- Note: This test expects a list of .p files (one per line) through stdin
 
@@ -18,7 +34,7 @@ main ::  IO ()
 main = do
   files <- lines `fmap` getContents
   --print (length files)
-  print_export <- getArgs
+  Options print_export <- execParser parserInfo
   forM_ files (diff_once_twice print_export)
   exitWith ExitSuccess
 
