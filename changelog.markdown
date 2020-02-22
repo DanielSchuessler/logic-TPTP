@@ -1,3 +1,7 @@
+## 0.4.7.0
+
+* Fix to work with happy >=1.19.10
+
 ## 0.4.6.0
 
 * Add Semigroup instances for Monoids and fix cabal-version warning (Thanks to @msakai)

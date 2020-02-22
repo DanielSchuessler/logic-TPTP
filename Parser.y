@@ -369,11 +369,12 @@ general_term  :  general_data  {GTerm $1}
 
 general_data  :: {GData}
 general_data  :  atomic_word  { GWord $1 }
+               | formula_data  { $1 }
                | atomic_word  lp general_terms  rp { GApp $1 $3 }
                | variable  { GVar $1 }
                | number  { GNumber $1 }
                | distinct_object { GDistinctObject (stripQuotes '"' $1) }
-               | formula_data  { $1 }
+
 
 formula_data :: {GData}
 formula_data  :  tok_fd_fof lp fof_formula  rp { GFormulaData "$fof" $3 }
