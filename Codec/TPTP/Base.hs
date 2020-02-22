@@ -287,6 +287,7 @@ data GData = GWord AtomicWord
                  | GNumber Rational
                  | GDistinctObject String
                  | GFormulaData String Formula
+                 | GFormulaTerm String Term
                    deriving (Eq,Ord,Show,Read,Data,Typeable)
 
 -- | Metadata (the /general_term/ rule in TPTP's grammar)

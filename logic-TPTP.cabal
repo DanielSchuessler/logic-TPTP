@@ -1,5 +1,5 @@
 name: logic-TPTP
-version: 0.4.6.0
+version: 0.4.7.0
 cabal-version: >= 1.8
 build-type: Simple
 license: GPL
@@ -96,6 +96,7 @@ Executable TestImportExportImportFile
  build-depends:     logic-TPTP
                   , base
                   , ansi-wl-pprint
+                  , optparse-applicative >=0.11 && <0.16
                   , pcre-light
                   , semigroups
  if impl(ghc <7.10)
@@ -104,7 +105,8 @@ Executable TestImportExportImportFile
  if !flag(BuildTestPrograms)
   buildable: False
 
-Executable TestImportExportRandom
+Test-suite TestImportExportRandom
+ type:              exitcode-stdio-1.0
  main-is:           TestImportExportRandom.hs
  other-modules:     Common
  hs-source-dirs:    testing
@@ -119,8 +121,6 @@ Executable TestImportExportRandom
  if impl(ghc <7.10)
   build-depends:    pcre-light <0.4.1
  other-extensions:  CPP
- if !flag(BuildTestPrograms)
-  buildable: False
 
 Executable PrettyPrintFile
  main-is:           PrettyPrintFile.hs
