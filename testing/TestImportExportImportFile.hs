@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE PackageImports #-}
 module Main where
 
 import Control.Monad
@@ -9,7 +8,7 @@ import System.Exit
 import Common
 import Options.Applicative
 
-import "logic-TPTP" Codec.TPTP
+import Codec.TPTP
 
 data Options
   = Options

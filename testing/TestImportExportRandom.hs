@@ -1,12 +1,11 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE PackageImports #-}
 module Main where
 
 import Test.QuickCheck
 import Common
 import Data.Functor.Identity
 
-import "logic-TPTP" Codec.TPTP
+import Codec.TPTP
 
 main ::  IO ()
 main = quickCheckWith (stdArgs { maxSuccess = 5000 }) prop_test_ie

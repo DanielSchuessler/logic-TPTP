@@ -6,7 +6,6 @@
  -XRecordWildCards
  -XDeriveDataTypeable
  -XOverlappingInstances
- -XPackageImports
  -fwarn-incomplete-patterns
  #-}
 
