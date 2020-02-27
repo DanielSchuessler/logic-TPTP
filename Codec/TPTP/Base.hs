@@ -503,9 +503,38 @@ instance Arbitrary GData
                            ,arbNum GNumber
 
                            ,GDistinctObject <$> arbPrintable
-                           ,GFormulaData `fmap` ((:) '$' `fmap` arbLowerWord) `ap` (sized (\n -> resize (n `div` 2) arbitrary))
+                           ,oneof
+                            [ GFormulaData "$fof" `fmap` sized (\n -> resize (n `div` 2) arbitrary)
+                            , GFormulaData "$cnf" `fmap` sized (\n -> resize (n `div` 2) arbCNF)
+                            , GFormulaTerm "$fot" `fmap` sized (\n -> resize (n `div` 2) arbitrary)
+                            ]
                            ]
 
+arbCNF :: Gen Formula
+arbCNF = do
+    (xs :: [Formula]) <- liftArbitrary arbLiteral `suchThat` (not . Prelude.null)
+    return $ foldl1 (.|.) xs
+
+
+arbLiteral :: Gen Formula
+arbLiteral = oneof
+    [
+      do
+            p <- arbitrary
+            x <- arbAtomicFormula
+            return $ if p then x else (.~.) x
+    , do
+            x1 <- arbitrary
+            x2 <- arbitrary
+            return $ F $ point $ InfixPred x1 (:!=:) x2
+    ]
+
+
+arbAtomicFormula :: Gen Formula
+arbAtomicFormula = fmap (F . point) $ do
+    x1 <- arbitrary
+    x2 <- argsFreq vector
+    return (PredApp x1 x2)
 
 
 instance Arbitrary GTerm

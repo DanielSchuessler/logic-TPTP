@@ -378,10 +378,7 @@ general_data  :  atomic_word  { GWord $1 }
 
 formula_data :: {GData}
 formula_data  :  tok_fd_fof lp fof_formula  rp { GFormulaData "$fof" $3 }
-                 -- NOTE(msakai): I use cnf_formula instead of fof_formula 
-                 -- because Formula instance of ToTPTP class produce strings 
-                 -- that cannot be parsed by cnf_formula.
-               | tok_fd_cnf lp fof_formula  rp { GFormulaData "$cnf" $3 }
+               | tok_fd_cnf lp cnf_formula  rp { GFormulaData "$cnf" $3 }
                | tok_fd_fot lp term rp         { GFormulaTerm "$fot" $3 }
 
 general_list  :: {[GTerm]}

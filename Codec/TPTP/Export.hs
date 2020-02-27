@@ -141,6 +141,16 @@ instance ToTPTP GData where
    GVar x -> toTPTP x
    GNumber x -> showsRational x
    GDistinctObject x -> showString (tptpQuote x)
+   GFormulaData str@"$cnf" formu -> s str . s "(" . cnfToTPTP formu . s ")"
+     where
+       cnfToTPTP :: Formula -> ShowS
+       cnfToTPTP (F (Identity (BinOp l (:|:) r))) = cnfToTPTP l . s " | " . cnfToTPTP r
+       cnfToTPTP (F (Identity ((:~:) x@(F (Identity (PredApp _ _)))))) = s "~ " . toTPTP x
+       cnfToTPTP x@(F (Identity (PredApp _ _))) = toTPTP x
+       -- We do not call toTPTP directly on the formula in InfixPred case, because parenthesis should not be printed.
+       cnfToTPTP (F (Identity (InfixPred x1 (:!=:) x2))) = toTPTP x1 . s " != " . toTPTP x2
+       cnfToTPTP x = error $ show x ++ " is not a literal"
+
    GFormulaData str formu -> s str . s "(" . toTPTP formu . s ")"
    GFormulaTerm str term -> s str . s "(" . toTPTP term . s ")"
 
