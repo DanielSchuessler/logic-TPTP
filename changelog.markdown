@@ -1,3 +1,9 @@
+## 0.5.0.0
+
+* Add `GFormulaTerm` constructor to `GData` and support `$fot` `formula_data` (#1, #2, #19, thanks to @agomezl)
+* Produce valid `$cnf` `formula_data` (#23)
+* Improve test suites
+
 ## 0.4.7.0
 
 * Fix to work with happy >=1.19.10
