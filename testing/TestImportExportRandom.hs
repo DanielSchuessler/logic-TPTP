@@ -19,10 +19,9 @@ prop_test_ie f =
 
           dif = diffAFormula f g
        in
-          whenFail
-          (putStrLn . prettySimple $ dif)
-
-           (f==g)
+          counterexample tptp $
+           whenFail (putStrLn . prettySimple $ dif) $
+            (f==g)
 
           -- (case dif of
           --    OtherSame -> True
