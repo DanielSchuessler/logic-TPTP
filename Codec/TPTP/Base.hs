@@ -506,6 +506,7 @@ instance Arbitrary GData
                            ,oneof
                             [ GFormulaData "$fof" `fmap` sized (\n -> resize (n `div` 2) arbitrary)
                             , GFormulaData "$cnf" `fmap` sized (\n -> resize (n `div` 2) arbCNF)
+                            , GFormulaTerm "$fot" `fmap` sized (\n -> resize (n `div` 2) arbitrary)
                             ]
                            ]
 
