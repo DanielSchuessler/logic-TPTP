@@ -5,67 +5,76 @@
   , OverlappingInstances, RankNTypes
   #-}
 {-# OPTIONS -Wall #-}
-module Codec.TPTP.Export(toTPTP',ToTPTP(..),isLowerWord) where
+module Codec.TPTP.Export(toTPTP, toTPTP',ToTPTP(..),toTPTPByteString,isLowerWord) where
 
 import Codec.TPTP.Base
 import Control.Monad.Identity
+import Data.List (intersperse)
+import Data.Monoid hiding (All (..))
 import Data.Ratio
+import qualified Data.ByteString.Lazy.Char8 as BL
+import qualified Data.ByteString.Lazy.Builder as Builder
 
--- | Convenient wrapper for 'toTPTP'
+
+toTPTP :: forall a. (ToTPTP a) => a -> ShowS
+toTPTP a s = toTPTP' a ++ s
+
 toTPTP' :: forall a. (ToTPTP a) => a -> String
-toTPTP' = ($"") . toTPTP
+toTPTP' = BL.unpack . toTPTPByteString -- TODO: handle UTF-8
 
-s :: String -> String -> String
-s = showString
+toTPTPByteString :: forall a. (ToTPTP a) => a -> BL.ByteString
+toTPTPByteString = Builder.toLazyByteString . toTPTPBuilder
 
-comma :: String -> String
-comma = s ","
+s :: String -> Builder.Builder
+s = Builder.string7
+
+comma :: Builder.Builder
+comma = Builder.char7 ','
 
 commaSepMap :: forall a.
-               (a -> String -> String) -> [a] -> String -> String
-commaSepMap _ [] = s ""
-commaSepMap f (y:ys) = f y . foldr (\x xs -> comma . f x . xs) id ys
+               (a -> Builder.Builder) -> [a] -> Builder.Builder
+commaSepMap f = mconcat . intersperse comma . map f
 
 
 
 
 class ToTPTP a where
     -- | Convert to TPTP
-    toTPTP :: a -> ShowS
+    toTPTPBuilder :: a -> Builder.Builder
 
 instance ToTPTP [TPTP_Input] where
-    toTPTP = foldr (\x xs -> toTPTP x . s "\n" . xs) id
+    toTPTPBuilder = mconcat . map (\x -> toTPTPBuilder x <> Builder.char8 '\n')
 
 instance ToTPTP TPTP_Input where
-    toTPTP AFormula{..} =
-        s "fof(" . toTPTP name . comma . toTPTP role . comma .
-          toTPTP formula . toTPTP annotations . s ")."
+    toTPTPBuilder AFormula{..} =
+        s "fof(" <> toTPTPBuilder name <> comma <> toTPTPBuilder role <> comma <>
+          toTPTPBuilder formula <> toTPTPBuilder annotations <> s ")."
 
-    toTPTP (Comment x) =
-        s x -- % included in x
+    toTPTPBuilder (Comment x) =
+        Builder.stringUtf8 x -- % included in x
 
-    toTPTP (Include x sel) = s "include" . s "(" . showString (tptpSQuote x) .
+    toTPTPBuilder (Include x sel) = s "include" <> s "(" <> Builder.stringUtf8 (tptpSQuote x) <>
 
-                             case sel of { [] -> id; _ -> s ",[" . commaSepMap toTPTP sel . s "]" } .
+                             case sel of { [] -> mempty; _ -> s ",[" <> commaSepMap toTPTPBuilder sel <> s "]" } <>
 
 
                              s ")."
 
 
 instance ToTPTP Role where
-    toTPTP (Role x) = s x
+    toTPTPBuilder (Role x) = Builder.stringUtf8 x
 
 instance ToTPTP Quant where
-    toTPTP All = s "!"
-    toTPTP Exists = s "?"
+    toTPTPBuilder All = s "!"
+    toTPTPBuilder Exists = s "?"
 
 instance ToTPTP InfixPred where
-    toTPTP x = case x of
+    toTPTPBuilder x = case x of
         (:=:)  -> s "="
         (:!=:) -> s "!="
 
 instance ToTPTP BinOp where
-    toTPTP x = case x of
+    toTPTPBuilder x = case x of
         (:<=>:) -> s "<=>"
         (:=>:)  -> s "=>"
         (:<=:)  -> s "<="
@@ -76,40 +85,43 @@ instance ToTPTP BinOp where
         (:<~>:) -> s "<~>"
 
 instance (ToTPTP f, ToTPTP t) => ToTPTP (Formula0 t f) where
-    toTPTP formu =
+    toTPTPBuilder formu =
       let
+        showParen True x = s "(" <> x <> s ")"
+        showParen False x = x
+
         result =
            case formu of
                Quant q vars f    ->
                    let par = True in
 
-                   toTPTP q
-                      . s " ["
-                      . commaSepMap toTPTP vars
-                      . s "] : "
-                      . showParen par (toTPTP f)
+                   toTPTPBuilder q
+                      <> s " ["
+                      <> commaSepMap toTPTPBuilder vars
+                      <> s "] : "
+                      <> showParen par (toTPTPBuilder f)
 
-               PredApp p [] -> toTPTP p
-               PredApp p args -> toTPTP p . s "(" . commaSepMap toTPTP args . s ")"
-               (:~:) f -> s "~ " . showParen True (toTPTP f)
+               PredApp p [] -> toTPTPBuilder p
+               PredApp p args -> toTPTPBuilder p <> s "(" <> commaSepMap toTPTPBuilder args <> s ")"
+               (:~:) f -> s "~ " <> showParen True (toTPTPBuilder f)
 
                BinOp x op y -> showParen True $
-                   (toTPTP x) . s " " . toTPTP op . s " " . (toTPTP y)
+                   (toTPTPBuilder x) <> s " " <> toTPTPBuilder op <> s " " <> (toTPTPBuilder y)
 
                InfixPred x op y -> showParen True $
-                   (toTPTP x) . s " " . toTPTP op . s " " . (toTPTP y)
+                   (toTPTPBuilder x) <> s " " <> toTPTPBuilder op <> s " " <> (toTPTPBuilder y)
       in
         result
 
 instance ToTPTP t => ToTPTP (Term0 t) where
-    toTPTP term =
+    toTPTPBuilder term =
 
              case term of
-               Var x -> toTPTP x
+               Var x -> toTPTPBuilder x
                NumberLitTerm d -> showsRational d
-               DistinctObjectTerm x -> showString (tptpQuote x)
-               FunApp f [] -> toTPTP f
-               FunApp f args -> toTPTP f . s "(" . commaSepMap toTPTP args . s ")"
+               DistinctObjectTerm x -> Builder.stringUtf8 (tptpQuote x)
+               FunApp f [] -> toTPTPBuilder f
+               FunApp f args -> toTPTPBuilder f <> s "(" <> commaSepMap toTPTPBuilder args <> s ")"
 
 
 deriving instance (ToTPTP a) => (ToTPTP (Identity a))
@@ -118,41 +130,41 @@ deriving instance ToTPTP Term
 
 
 instance ToTPTP Annotations where
-    toTPTP NoAnnotations = s ""
-    toTPTP (Annotations a b) = s "," . toTPTP a . toTPTP b
+    toTPTPBuilder NoAnnotations = mempty
+    toTPTPBuilder (Annotations a b) = s "," <> toTPTPBuilder a <> toTPTPBuilder b
 
 instance ToTPTP UsefulInfo where
-    toTPTP NoUsefulInfo = s ""
-    toTPTP (UsefulInfo xs) = s "," . s "[" . commaSepMap toTPTP xs . s "]"
+    toTPTPBuilder NoUsefulInfo = mempty
+    toTPTPBuilder (UsefulInfo xs) = s "," <> s "[" <> commaSepMap toTPTPBuilder xs <> s "]"
 
 instance ToTPTP GTerm where
-    toTPTP gt = case gt of
-                  GTerm x -> toTPTP x
-                  ColonSep x y -> toTPTP x . s ":" . toTPTP y
-                  GList xs -> s "[" . commaSepMap toTPTP xs . s "]"
+    toTPTPBuilder gt = case gt of
+                  GTerm x -> toTPTPBuilder x
+                  ColonSep x y -> toTPTPBuilder x <> s ":" <> toTPTPBuilder y
+                  GList xs -> s "[" <> commaSepMap toTPTPBuilder xs <> s "]"
 
 instance ToTPTP AtomicWord where
-    toTPTP (AtomicWord x) = s $ if isLowerWord x then x else tptpSQuote x
+    toTPTPBuilder (AtomicWord x) = Builder.stringUtf8 $ if isLowerWord x then x else tptpSQuote x
 
 instance ToTPTP GData where
- toTPTP gd = case gd of
-   GWord x -> toTPTP x
-   GApp x args -> toTPTP x . s "(" . commaSepMap toTPTP args . s ")"
-   GVar x -> toTPTP x
+ toTPTPBuilder gd = case gd of
+   GWord x -> toTPTPBuilder x
+   GApp x args -> toTPTPBuilder x <> s "(" <> commaSepMap toTPTPBuilder args <> s ")"
+   GVar x -> toTPTPBuilder x
    GNumber x -> showsRational x
-   GDistinctObject x -> showString (tptpQuote x)
-   GFormulaData str@"$cnf" formu -> s str . s "(" . cnfToTPTP formu . s ")"
+   GDistinctObject x -> Builder.stringUtf8 (tptpQuote x)
+   GFormulaData str@"$cnf" formu -> Builder.stringUtf8 str <> s "(" <> cnfToTPTP formu <> s ")"
      where
-       cnfToTPTP :: Formula -> ShowS
-       cnfToTPTP (F (Identity (BinOp l (:|:) r))) = cnfToTPTP l . s " | " . cnfToTPTP r
-       cnfToTPTP (F (Identity ((:~:) x@(F (Identity (PredApp _ _)))))) = s "~ " . toTPTP x
-       cnfToTPTP x@(F (Identity (PredApp _ _))) = toTPTP x
-       -- We do not call toTPTP directly on the formula in InfixPred case, because parenthesis should not be printed.
-       cnfToTPTP (F (Identity (InfixPred x1 (:!=:) x2))) = toTPTP x1 . s " != " . toTPTP x2
+       cnfToTPTP :: Formula -> Builder.Builder
+       cnfToTPTP (F (Identity (BinOp l (:|:) r))) = cnfToTPTP l <> s " | " <> cnfToTPTP r
+       cnfToTPTP (F (Identity ((:~:) x@(F (Identity (PredApp _ _)))))) = s "~ " <> toTPTPBuilder x
+       cnfToTPTP x@(F (Identity (PredApp _ _))) = toTPTPBuilder x
+       -- We do not call toTPTPBuilder directly on the formula in InfixPred case, because parenthesis should not be printed.
+       cnfToTPTP (F (Identity (InfixPred x1 (:!=:) x2))) = toTPTPBuilder x1 <> s " != " <> toTPTPBuilder x2
        cnfToTPTP x = error $ show x ++ " is not a literal"
 
-   GFormulaData str formu -> s str . s "(" . toTPTP formu . s ")"
-   GFormulaTerm str term -> s str . s "(" . toTPTP term . s ")"
+   GFormulaData str formu -> Builder.stringUtf8 str <> s "(" <> toTPTPBuilder formu <> s ")"
+   GFormulaTerm str term -> Builder.stringUtf8 str <> s "(" <> toTPTPBuilder term <> s ")"
 
 tptpQuote :: [Char] -> [Char]
 tptpQuote x = "\"" ++ concatMap go x ++ "\""
@@ -182,8 +194,8 @@ isLowerWord str = case str of
                                _ -> False
 
 instance ToTPTP V where
-    toTPTP (V x) = s x
+    toTPTPBuilder (V x) = Builder.stringUtf8 x
 
 
-showsRational :: Rational -> ShowS
-showsRational q = shows (numerator q) . showChar '/' . shows (denominator q)
+showsRational :: Rational -> Builder.Builder
+showsRational q = Builder.integerDec (numerator q) <> Builder.char7 '/' <> Builder.integerDec (denominator q)

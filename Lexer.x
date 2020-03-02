@@ -6,9 +6,10 @@
 
 module Lexer where
 import Data.Ratio
+import qualified Data.ByteString.Lazy.Char8 as BL
 }
 
-%wrapper "posn"
+%wrapper "posn-bytestring"
 
 $sign = [\+\-]
 $exponent = [Ee]
@@ -69,7 +70,7 @@ tokens :-
 {
 -- Each action has type :: String -> Token
 
-withPos f pos s = (pos, f s)
+withPos f pos s = (pos, f (BL.unpack s)) -- TODO: handle UTF-8
 
 -- The token type:
 data Token =

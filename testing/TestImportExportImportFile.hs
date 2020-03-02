@@ -2,6 +2,8 @@
 module Main where
 
 import Control.Monad
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Monoid
 import Text.PrettyPrint.ANSI.Leijen hiding ((<$>))
 import System.Exit
@@ -45,18 +47,18 @@ diff_once_twice ::  Bool -> Bool -> String -> IO ()
 diff_once_twice print_export print_failure_only infilename'  = do
   --let tmp = "/tmp/tmp.tptp"
   unless print_failure_only $ putStrLn infilename'
-  input <- readFile infilename'
-  case findUnsupportedFormulaType input of
+  input <- BS.readFile infilename'
+  case findUnsupportedFormulaTypeByteString input of
      Just x -> do
        unless print_failure_only $ 
-         putStrLn . prettySimple . yellow . text $ ("Skipping unsupported formula type "++x)
+         putStrLn . prettySimple . yellow . text $ ("Skipping unsupported formula type "++BS.unpack x)
      Nothing -> do
 
-      let once = parse input
-      let tptp = toTPTP' once
+      let once = parseByteString (BL.fromStrict input)
+      let tptp = toTPTPByteString once
       when (print_export && not print_failure_only) $
-        putStrLn $ "new tptp = " ++tptp
-      let twice = parse tptp
+        BL.putStrLn $ BL.pack "new tptp = " <> tptp
+      let twice = parseByteString tptp
       let dif = mconcat (zipWith diffAFormula once twice)
       let success = (putStrLn . prettySimple . dullgreen . text $ "Ok")
 
