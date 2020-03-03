@@ -8,7 +8,6 @@
 module Lexer where
 import Data.Ratio
 import qualified Data.ByteString.Lazy.Char8 as BL
-import qualified Data.ByteString.Lazy.UTF8 as UTF8
 }
 
 %wrapper "posn-bytestring"
@@ -46,16 +45,16 @@ tokens :-
   ")"                                          { withPos $ const RP }
   ","                                          { withPos $ const Comma }
   "!="|"="|"<=>"|"<="|"=>"|"<~>"|"&"|"|"
-      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos $ Oper . UTF8.toString }
+      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos Oper }
   "."                                          { withPos $ const Dot }
-  ("%"|"#")$printable_char*                    { withPos $ CommentToken . UTF8.toString } -- comment line
-  "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken . UTF8.toString } -- comment block
-  [\'] @sq_char* [\']                          { withPos $ SingleQuoted . UTF8.toString }
-  [\"] @do_char* [\"]                          { withPos $ DoubleQuoted . UTF8.toString }
-  $dollar $dollar $lower_alpha $alpha_numeric* { withPos $ DollarDollarWord . UTF8.toString }
-  $dollar $lower_alpha $alpha_numeric*         { withPos $ DollarWord . UTF8.toString }
-  $upper_alpha $alpha_numeric*                 { withPos $ UpperWord . UTF8.toString }
-  $lower_alpha $alpha_numeric*                 { withPos $ LowerWord . UTF8.toString }
+  ("%"|"#")$printable_char*                    { withPos CommentToken } -- comment line
+  "/*" @not_star_slash "*"("*"*)"/"            { withPos CommentToken } -- comment block
+  [\'] @sq_char* [\']                          { withPos SingleQuoted }
+  [\"] @do_char* [\"]                          { withPos DoubleQuoted }
+  $dollar $dollar $lower_alpha $alpha_numeric* { withPos DollarDollarWord }
+  $dollar $lower_alpha $alpha_numeric*         { withPos DollarWord }
+  $upper_alpha $alpha_numeric*                 { withPos UpperWord }
+  $lower_alpha $alpha_numeric*                 { withPos LowerWord }
   "*"                                          { withPos $ const Star }
   "+"                                          { withPos $ const Plus }
   ">"                                          { withPos $ const Rangle }
@@ -82,20 +81,20 @@ data Token =
          | Dot
          | Lbrack
          | Rbrack
-         | Oper String
-         | SingleQuoted String
-         | DoubleQuoted String
-         | DollarWord String
-         | DollarDollarWord String
-         | UpperWord String
-         | LowerWord String
+         | Oper BL.ByteString
+         | SingleQuoted BL.ByteString
+         | DoubleQuoted BL.ByteString
+         | DollarWord BL.ByteString
+         | DollarDollarWord BL.ByteString
+         | UpperWord BL.ByteString
+         | LowerWord BL.ByteString
          | Star
          | Plus
          | Rangle
          | SignedInt Integer
          | UnsignedInt Integer
          | Real Rational
-         | CommentToken String
+         | CommentToken BL.ByteString
          | Slash
     deriving (Eq,Ord,Show)
 

@@ -1,4 +1,5 @@
 {
+{-# LANGUAGE OverloadedStrings #-}
 module ParserC where
 
 import Data.Char
@@ -13,6 +14,7 @@ import System.IO
 import System.IO.Unsafe
 import Control.Monad.Identity
 import Control.Monad.State
+import qualified Data.ByteString.Lazy.UTF8 as UTF8
 }
 
 %name parseTPTPwithComment
@@ -81,7 +83,7 @@ TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
 TPTP_input  :: {TPTP_Input_C}
 TPTP_input  : annotated_formula  {$1}
              | include  { $1 }
-             | comment { Comment $1 }
+             | comment { Comment (UTF8.toString $1) }
 
 annotated_formula  :: {TPTP_Input_C}
 annotated_formula  :  fof_annotated  {$1}
@@ -475,17 +477,17 @@ include_           :: {Token}
 include_           : tok_include_            comment_list { $1 }
 
 single_quoted      :: {String}
-single_quoted      : tok_single_quoted       comment_list { $1 }
+single_quoted      : tok_single_quoted       comment_list { UTF8.toString $1 }
 distinct_object    :: {String}
-distinct_object    : tok_distinct_object     comment_list { $1 }
+distinct_object    : tok_distinct_object     comment_list { UTF8.toString $1 }
 dollar_word        :: {String}
-dollar_word        : tok_dollar_word         comment_list { $1 }
+dollar_word        : tok_dollar_word         comment_list { UTF8.toString $1 }
 dollar_dollar_word :: {String}
-dollar_dollar_word : tok_dollar_dollar_word  comment_list { $1 }
+dollar_dollar_word : tok_dollar_dollar_word  comment_list { UTF8.toString $1 }
 upper_word         :: {String}
-upper_word         : tok_upper_word          comment_list { $1 }
+upper_word         : tok_upper_word          comment_list { UTF8.toString $1 }
 lower_word         :: {String}
-lower_word         : tok_lower_word          comment_list { $1 }
+lower_word         : tok_lower_word          comment_list { UTF8.toString $1 }
 signed_integer     :: {Integer}
 signed_integer     : tok_signed_integer      comment_list { $1 }
 unsigned_integer   :: {Integer}
@@ -494,7 +496,7 @@ real               :: {Rational}
 real               : tok_real                comment_list { $1 }
 
 comment_list :: {[String]}
-comment_list : {[]} | comment comment_list { $1 : $2 }
+comment_list : {[]} | comment comment_list { UTF8.toString $1 : $2 }
 
 {
 data AToken = AToken { tok :: Token, comm :: [String] }
