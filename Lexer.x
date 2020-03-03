@@ -1,4 +1,5 @@
 {
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS -fno-warn-missing-signatures #-}
 {-# OPTIONS -fno-warn-unused-matches #-}
 {-# OPTIONS -fno-warn-name-shadowing #-}
@@ -45,16 +46,16 @@ tokens :-
   ")"                                          { withPos $ const RP }
   ","                                          { withPos $ const Comma }
   "!="|"="|"<=>"|"<="|"=>"|"<~>"|"&"|"|"
-      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos $ Oper }
+      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos $ Oper . UTF8.toString }
   "."                                          { withPos $ const Dot }
-  ("%"|"#")$printable_char*                    { withPos $ CommentToken } -- comment line
-  "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken } -- comment block
-  [\'] @sq_char* [\']                          { withPos SingleQuoted }
-  [\"] @do_char* [\"]                          { withPos DoubleQuoted }
-  $dollar $dollar $lower_alpha $alpha_numeric* { withPos DollarDollarWord }
-  $dollar $lower_alpha $alpha_numeric*         { withPos DollarWord }
-  $upper_alpha $alpha_numeric*                 { withPos UpperWord }
-  $lower_alpha $alpha_numeric*                 { withPos LowerWord }
+  ("%"|"#")$printable_char*                    { withPos $ CommentToken . UTF8.toString } -- comment line
+  "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken . UTF8.toString } -- comment block
+  [\'] @sq_char* [\']                          { withPos $ SingleQuoted . UTF8.toString }
+  [\"] @do_char* [\"]                          { withPos $ DoubleQuoted . UTF8.toString }
+  $dollar $dollar $lower_alpha $alpha_numeric* { withPos $ DollarDollarWord . UTF8.toString }
+  $dollar $lower_alpha $alpha_numeric*         { withPos $ DollarWord . UTF8.toString }
+  $upper_alpha $alpha_numeric*                 { withPos $ UpperWord . UTF8.toString }
+  $lower_alpha $alpha_numeric*                 { withPos $ LowerWord . UTF8.toString }
   "*"                                          { withPos $ const Star }
   "+"                                          { withPos $ const Plus }
   ">"                                          { withPos $ const Rangle }
@@ -69,9 +70,9 @@ tokens :-
 
 
 {
--- Each action has type :: String -> Token
+-- Each action has type :: BL.ByteString -> Token
 
-withPos f pos s = (pos, f (UTF8.toString s))
+withPos f pos s = (pos, f s)
 
 -- The token type:
 data Token =
@@ -100,38 +101,44 @@ data Token =
 
 -- alex defines: alexScanTokens
 
-stripPlus :: String -> String
-stripPlus ('+':xs) = xs
-stripPlus xs = xs
+stripPlus :: BL.ByteString -> BL.ByteString
+stripPlus xs =
+    case BL.uncons xs of
+        Just ('+', xs') -> xs'
+        _ -> xs
 
+readDecimalFraction :: BL.ByteString -> Rational
+readDecimalFraction cs =
+    case BL.uncons cs of
+        Just ('-', cs') -> -(readUnsignedDecimalFraction cs')
+        _ -> readUnsignedDecimalFraction cs
 
-readDecimalFraction :: String -> Rational
-readDecimalFraction ('-':cs) = -(readUnsignedDecimalFraction cs)
-readDecimalFraction cs = readUnsignedDecimalFraction cs
+readInteger :: BL.ByteString -> Integer
+readInteger s =
+    case BL.readInteger s of
+        Nothing -> error "no parse"
+        Just (i, _) -> i
 
-readInteger :: String -> Integer
-readInteger = read
-
-
-readUnsignedDecimalFraction :: String -> Rational
+readUnsignedDecimalFraction :: BL.ByteString -> Rational
 readUnsignedDecimalFraction cs =
-    case break (=='.') cs of
-         (_,"") -> case breakExponent cs of
-                        (cs2,_:cs2') -> readIntegerRat cs2 * readExponent cs2'
-
-         (cs1,_:cs1') -> case breakExponent cs1' of
-                            (_,"") -> readIntegerRat cs1 + readFraction cs1'
-                            (cs2,_:cs2') -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2'
+    case BL.break (=='.') cs of
+         (_, BL.uncons -> Nothing) ->
+             case breakExponent cs of
+                 (cs2, BL.uncons -> Just (_, cs2')) -> readIntegerRat cs2 * readExponent cs2'              
+         (cs1, BL.uncons -> Just (_, cs1')) ->
+             case breakExponent cs1' of
+                 (_, BL.uncons -> Nothing) -> readIntegerRat cs1 + readFraction cs1'
+                 (cs2, BL.uncons -> Just (_, cs2')) -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2'
   where
-    breakExponent = break (`elem` "Ee")
+    breakExponent = BL.break (`elem` "Ee")
 
-    readExponent :: String -> Rational
+    readExponent :: BL.ByteString -> Rational
     readExponent = (10^^) . readInteger . stripPlus
 
-    readFraction :: String -> Rational
-    readFraction cs = readInteger cs % (10^(length cs))
+    readFraction :: BL.ByteString -> Rational
+    readFraction cs = readInteger cs % (10^(BL.length cs))
 
-    readIntegerRat :: String -> Rational
+    readIntegerRat :: BL.ByteString -> Rational
     readIntegerRat = fromIntegral . readInteger
 
 
