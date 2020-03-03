@@ -14,13 +14,14 @@ import Data.Monoid hiding (All (..))
 import Data.Ratio
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString.Lazy.Builder as Builder
+import qualified Data.ByteString.Lazy.UTF8 as UTF8
 
 
 toTPTP :: forall a. (ToTPTP a) => a -> ShowS
 toTPTP a s = toTPTP' a ++ s
 
 toTPTP' :: forall a. (ToTPTP a) => a -> String
-toTPTP' = BL.unpack . toTPTPByteString -- TODO: handle UTF-8
+toTPTP' = UTF8.toString . toTPTPByteString
 
 toTPTPByteString :: forall a. (ToTPTP a) => a -> BL.ByteString
 toTPTPByteString = Builder.toLazyByteString . toTPTPBuilder

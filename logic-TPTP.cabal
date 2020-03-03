@@ -71,6 +71,7 @@ Library
                    , semigroups
                    , transformers
                    , transformers-compat >= 0.5
+                   , utf8-string
 
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base

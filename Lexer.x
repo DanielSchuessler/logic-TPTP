@@ -7,6 +7,7 @@
 module Lexer where
 import Data.Ratio
 import qualified Data.ByteString.Lazy.Char8 as BL
+import qualified Data.ByteString.Lazy.UTF8 as UTF8
 }
 
 %wrapper "posn-bytestring"
@@ -70,7 +71,7 @@ tokens :-
 {
 -- Each action has type :: String -> Token
 
-withPos f pos s = (pos, f (BL.unpack s)) -- TODO: handle UTF-8
+withPos f pos s = (pos, f (UTF8.toString s))
 
 -- The token type:
 data Token =
