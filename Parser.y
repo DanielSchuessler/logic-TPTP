@@ -13,7 +13,9 @@ import Codec.TPTP.Base
 import System.IO
 import System.IO.Unsafe
 import Control.Monad.Identity
-import qualified Data.ByteString.Lazy.UTF8 as UTF8
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BL
+import qualified Data.ByteString.UTF8 as UTF8
 }
 
 %name parseTPTP
@@ -82,7 +84,7 @@ TPTP_file  : {[]} | TPTP_input TPTP_file  {$1 : $2}
 TPTP_input  :: {TPTP_Input}
 TPTP_input  : annotated_formula  {$1}
              | include  { $1 }
-             | comment { Comment (UTF8.toString $1) }
+             | comment { Comment (UTF8.toString (BL.toStrict $1)) }
 
 annotated_formula  :: {TPTP_Input}
 annotated_formula  :  fof_annotated  {$1}
@@ -102,7 +104,7 @@ annotations  :  comma source optional_info  { Annotations $2 $3 }
     | { NoAnnotations }
 
 formula_role  :: {Role}
-formula_role  : lower_word_ { Role $1 }
+formula_role  : lower_word_ { Role' $1 }
 
 
 fof_formula  :: {Formula}
@@ -276,35 +278,35 @@ defined_term  : defined_atom {$1}
 
 defined_atom  :: {Term}
 defined_atom  : number {numberLitTerm $1}
-               | distinct_object {distinctObjectTerm (stripQuotes '"' $1)}
+               | distinct_object {distinctObjectTerm' (stripQuotes '"' $1)}
 
 defined_atomic_term :: {Term}
 defined_atomic_term  : defined_plain_term {$1}
 
 defined_plain_term  :: {Term}
-defined_plain_term  : defined_constant {fApp (AtomicWord $1) []}
-                     | defined_functor  lp arguments  rp {fApp (AtomicWord $1) $3}
+defined_plain_term  : defined_constant {fApp (AtomicWord' $1) []}
+                     | defined_functor  lp arguments  rp {fApp (AtomicWord' $1) $3}
 
-defined_constant  :: {String}
+defined_constant  :: {BS.ByteString}
 defined_constant  : defined_functor {$1}
 -- defined_constant  :==
 
-defined_functor  :: {String}
+defined_functor  :: {BS.ByteString}
 defined_functor  : atomic_defined_word {$1}
 -- defined_functor  :==
 
 system_term  :: {Term}
-system_term  :  system_constant  {fApp (AtomicWord $1) []}
-              | system_functor  lp arguments  rp {fApp (AtomicWord $1) $3}
+system_term  :  system_constant  {fApp (AtomicWord' $1) []}
+              | system_functor  lp arguments  rp {fApp (AtomicWord' $1) $3}
 
-system_constant  :: {String}
+system_constant  :: {BS.ByteString}
 system_constant  : system_functor  {$1}
 
-system_functor  :: {String}
+system_functor  :: {BS.ByteString}
 system_functor  : atomic_system_word {$1}
 
 variable  :: {V}
-variable  : upper_word {V $1}
+variable  : upper_word {V' $1}
 
 arguments  :: {[Term]}
 arguments  : term  {[$1]}
@@ -375,7 +377,7 @@ general_data  :  atomic_word  { GWord $1 }
                | atomic_word  lp general_terms  rp { GApp $1 $3 }
                | variable  { GVar $1 }
                | number  { GNumber $1 }
-               | distinct_object { GDistinctObject (stripQuotes '"' $1) }
+               | distinct_object { GDistinctObject' (stripQuotes '"' $1) }
 
 
 formula_data :: {GData}
@@ -393,16 +395,16 @@ general_terms  :  general_term  {[$1]}
 
 name  :: {AtomicWord}
 name  : atomic_word  {$1}
-       | unsigned_integer {AtomicWord(show $1)}
+       | unsigned_integer {AtomicWord' (BS.pack (show $1))}
 
 atomic_word  :: {AtomicWord}
-atomic_word  : lower_word_ {AtomicWord $1}
-              | single_quoted{AtomicWord (stripQuotes '\'' $1)}
+atomic_word  : lower_word_ {AtomicWord' $1}
+              | single_quoted{AtomicWord' (stripQuotes '\'' $1)}
 
-atomic_defined_word  :: {String}
+atomic_defined_word  :: {BS.ByteString}
 atomic_defined_word  : dollar_word{$1}
 
-atomic_system_word  :: {String}
+atomic_system_word  :: {BS.ByteString}
 atomic_system_word  : dollar_dollar_word{$1}
 
 number  :: {Rational} -- maybe keep track of the number type that was actually parsed
@@ -415,9 +417,9 @@ rational :: {Rational}
 rational : integer tok_slash unsigned_integer {$1 % $3}
 
 file_name  :: {String}
-file_name  : single_quoted {stripQuotes '\'' $1}
+file_name  : single_quoted {UTF8.toString (stripQuotes '\'' $1)}
 
-lower_word_ :: {String}
+lower_word_ :: {BS.ByteString}
 lower_word_ : lower_word {$1} | fof {"fof"} | cnf {"cnf"} | include_ {"include"} -- "fof" is a perfectly cromulent lower_word, but it is interpreted as a "fof" token
 
 lp                 :: {Token}
@@ -476,18 +478,18 @@ cnf                : tok_cnf                 comment_list { $1 }
 include_           :: {Token}
 include_           : tok_include_            comment_list { $1 }
 
-single_quoted      :: {String}
-single_quoted      : tok_single_quoted       comment_list { UTF8.toString $1 }
-distinct_object    :: {String}
-distinct_object    : tok_distinct_object     comment_list { UTF8.toString $1 }
-dollar_word        :: {String}
-dollar_word        : tok_dollar_word         comment_list { UTF8.toString $1 }
-dollar_dollar_word :: {String}
-dollar_dollar_word : tok_dollar_dollar_word  comment_list { UTF8.toString $1 }
-upper_word         :: {String}
-upper_word         : tok_upper_word          comment_list { UTF8.toString $1 }
-lower_word         :: {String}
-lower_word         : tok_lower_word          comment_list { UTF8.toString $1 }
+single_quoted      :: {BS.ByteString}
+single_quoted      : tok_single_quoted       comment_list { BL.toStrict $1 }
+distinct_object    :: {BS.ByteString}
+distinct_object    : tok_distinct_object     comment_list { BL.toStrict $1 }
+dollar_word        :: {BS.ByteString}
+dollar_word        : tok_dollar_word         comment_list { BL.toStrict $1 }
+dollar_dollar_word :: {BS.ByteString}
+dollar_dollar_word : tok_dollar_dollar_word  comment_list { BL.toStrict $1 }
+upper_word         :: {BS.ByteString}
+upper_word         : tok_upper_word          comment_list { BL.toStrict $1 }
+lower_word         :: {BS.ByteString}
+lower_word         : tok_lower_word          comment_list { BL.toStrict $1 }
 signed_integer     :: {Integer}
 signed_integer     : tok_signed_integer      comment_list { $1 }
 unsigned_integer   :: {Integer}
@@ -496,11 +498,11 @@ real               :: {Rational}
 real               : tok_real                comment_list { $1 }
 
 comment_list :: {[String]}
-comment_list : {[]} | comment comment_list { UTF8.toString $1 : $2 }
+comment_list : {[]} | comment comment_list { UTF8.toString (BL.toStrict $1) : $2 }
 
 {
 
-stripQuotes which (x:xs) = go xs
+stripQuotes which xs = BS.pack $ go $ BS.unpack (BS.tail xs)
                       where
                         go [x] = []
                         go ('\\':'\\':xs) = '\\':go xs

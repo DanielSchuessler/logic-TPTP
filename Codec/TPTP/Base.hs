@@ -3,6 +3,7 @@
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
   , OverlappingInstances, ScopedTypeVariables
+  , ViewPatterns, PatternSynonyms
   #-}
 
 module Codec.TPTP.Base where
@@ -20,6 +21,8 @@ import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.State
 import Data.Data
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as UTF8
 import Data.Function
 import Data.Monoid hiding(All)
 import Data.Semigroup (Semigroup)
@@ -75,7 +78,7 @@ forgetTC (T t) = T . return $
   case evalState t [] of
     Var v -> Var v
     NumberLitTerm d -> NumberLitTerm d
-    DistinctObjectTerm s -> DistinctObjectTerm s
+    DistinctObjectTerm' s -> DistinctObjectTerm' s
     FunApp aw ts -> FunApp aw (fmap forgetTC ts)
 
 
@@ -157,7 +160,11 @@ numberLitTerm = (T . point) . NumberLitTerm
 
 -- | Double-quoted string literal, called /Distinct Object/ in TPTP's grammar
 distinctObjectTerm :: Pointed c => String -> T c
-distinctObjectTerm = (T . point) . DistinctObjectTerm
+distinctObjectTerm = distinctObjectTerm' . UTF8.fromString
+
+-- | Double-quoted string literal, called /Distinct Object/ in TPTP's grammar
+distinctObjectTerm' :: Pointed c => BS.ByteString -> T c
+distinctObjectTerm' = (T . point) . DistinctObjectTerm'
 
 infixl 2  .<=>. ,  .=>. ,  .<=. ,  .<~>.
 infixl 3  .|. ,  .~|.
@@ -180,13 +187,17 @@ data Formula0 term formula =
 data Term0 term =
             Var V -- ^ Variable
           | NumberLitTerm Rational -- ^ Number literal
-          | DistinctObjectTerm String -- ^ Double-quoted item
+          | DistinctObjectTerm' BS.ByteString -- ^ Double-quoted item
           | FunApp AtomicWord [term] -- ^ Function symbol application (constants are encoded as nullary functions)
             deriving (Eq,Ord,Show,Read,Data,Typeable)
 
 
 
+pattern DistinctObjectTerm :: String -> Term0 term
+pattern DistinctObjectTerm s <- DistinctObjectTerm' (UTF8.toString -> s) where
+  DistinctObjectTerm s = DistinctObjectTerm' (UTF8.fromString s)
 
+{-# COMPLETE Var, NumberLitTerm, DistinctObjectTerm, FunApp #-}
 
 
 -- | Binary formula connectives
@@ -276,19 +287,38 @@ data UsefulInfo = NoUsefulInfo | UsefulInfo [GTerm]
                   deriving (Eq,Ord,Show,Read,Data,Typeable)
 
 -- | Formula roles
-newtype Role = Role { unrole :: String }
+newtype Role = Role' { unrole' :: BS.ByteString }
             deriving (Eq,Ord,Show,Read,Data,Typeable)
 
+pattern Role :: String -> Role
+#if __GLASGOW_HASKELL__ >= 800
+pattern Role{ unrole } <- Role' (UTF8.toString -> unrole) where
+  Role u = Role'{ unrole' = UTF8.fromString u }
+#else
+pattern Role u  <- Role' (UTF8.toString -> u) where
+  Role u = Role'{ unrole' = UTF8.fromString u }
+
+unrole :: Role -> String
+unrole = UTF8.toString . unrole'
+#endif
+
+{-# COMPLETE Role #-}
 
 -- | Metadata (the /general_data/ rule in TPTP's grammar)
 data GData = GWord AtomicWord
                  | GApp AtomicWord [GTerm]
                  | GVar V
                  | GNumber Rational
-                 | GDistinctObject String
+                 | GDistinctObject' BS.ByteString
                  | GFormulaData String Formula
                  | GFormulaTerm String Term
                    deriving (Eq,Ord,Show,Read,Data,Typeable)
+
+pattern GDistinctObject :: String -> GData
+pattern GDistinctObject s <- GDistinctObject' (UTF8.toString -> s) where
+  GDistinctObject s = GDistinctObject' (UTF8.fromString s)
+
+{-# COMPLETE GWord, GApp, GVar, GNumber, GDistinctObject, GFormulaData, GFormulaTerm #-}
 
 -- | Metadata (the /general_term/ rule in TPTP's grammar)
 data GTerm = ColonSep GData GTerm
@@ -568,20 +598,38 @@ instance Arbitrary GTerm
 -- | TPTP constant symbol\/predicate symbol\/function symbol identifiers (they are output in single quotes unless they are /lower_word/s).
 --
 -- Tip: Use the @-XOverloadedStrings@ compiler flag if you don't want to have to type /AtomicWord/ to construct an 'AtomicWord'
-newtype AtomicWord = AtomicWord String
-    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid,IsString)
+newtype AtomicWord = AtomicWord' BS.ByteString
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid)
+
+pattern AtomicWord :: String -> AtomicWord
+pattern AtomicWord x <- AtomicWord' (UTF8.toString -> x) where
+  AtomicWord x = AtomicWord' (UTF8.fromString x)
+
+{-# COMPLETE AtomicWord #-}
 
 instance Arbitrary AtomicWord where
     arbitrary = frequency [  (5, AtomicWord <$> arbLowerWord)
                             ,(1, AtomicWord <$> arbPrintable)
                           ]
 
+instance IsString AtomicWord where
+    fromString = AtomicWord
+
 -- | Variable names
-newtype V = V String
-    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid,IsString)
+newtype V = V' BS.ByteString
+    deriving (Eq,Ord,Show,Data,Typeable,Read,Semigroup,Monoid)
+
+pattern V :: String -> V
+pattern V x <- V' (UTF8.toString -> x) where
+  V x = V' (UTF8.fromString x)
+
+{-# COMPLETE V #-}
 
 instance Arbitrary V where
-    arbitrary = V <$> arbVar
+    arbitrary = fromString <$> arbVar
+
+instance IsString V where
+    fromString = V
 
 -- * Fixed-point style decorated formulae and terms
 

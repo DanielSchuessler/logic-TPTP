@@ -2,7 +2,7 @@
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, RankNTypes
+  , OverlappingInstances, RankNTypes, OverloadedStrings
   #-}
 {-# OPTIONS -Wall #-}
 module Codec.TPTP.Export(toTPTP, toTPTP',ToTPTP(..),toTPTPByteString,isLowerWord) where
@@ -12,6 +12,7 @@ import Control.Monad.Identity
 import Data.List (intersperse)
 import Data.Monoid hiding (All (..))
 import Data.Ratio
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString.Lazy.Builder as Builder
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
@@ -120,7 +121,7 @@ instance ToTPTP t => ToTPTP (Term0 t) where
              case term of
                Var x -> toTPTPBuilder x
                NumberLitTerm d -> showsRational d
-               DistinctObjectTerm x -> Builder.stringUtf8 (tptpQuote x)
+               DistinctObjectTerm' x -> Builder.byteString (tptpQuote x)
                FunApp f [] -> toTPTPBuilder f
                FunApp f args -> toTPTPBuilder f <> s "(" <> commaSepMap toTPTPBuilder args <> s ")"
 
@@ -145,7 +146,7 @@ instance ToTPTP GTerm where
                   GList xs -> s "[" <> commaSepMap toTPTPBuilder xs <> s "]"
 
 instance ToTPTP AtomicWord where
-    toTPTPBuilder (AtomicWord x) = Builder.stringUtf8 $ if isLowerWord x then x else tptpSQuote x
+    toTPTPBuilder (AtomicWord' x) = Builder.byteString $ if isLowerWord' x then x else tptpSQuote' x
 
 instance ToTPTP GData where
  toTPTPBuilder gd = case gd of
@@ -153,7 +154,7 @@ instance ToTPTP GData where
    GApp x args -> toTPTPBuilder x <> s "(" <> commaSepMap toTPTPBuilder args <> s ")"
    GVar x -> toTPTPBuilder x
    GNumber x -> showsRational x
-   GDistinctObject x -> Builder.stringUtf8 (tptpQuote x)
+   GDistinctObject' x -> Builder.byteString (tptpQuote x)
    GFormulaData str@"$cnf" formu -> Builder.stringUtf8 str <> s "(" <> cnfToTPTP formu <> s ")"
      where
        cnfToTPTP :: Formula -> Builder.Builder
@@ -167,12 +168,19 @@ instance ToTPTP GData where
    GFormulaData str formu -> Builder.stringUtf8 str <> s "(" <> toTPTPBuilder formu <> s ")"
    GFormulaTerm str term -> Builder.stringUtf8 str <> s "(" <> toTPTPBuilder term <> s ")"
 
-tptpQuote :: [Char] -> [Char]
-tptpQuote x = "\"" ++ concatMap go x ++ "\""
+tptpQuote :: BS.ByteString -> BS.ByteString
+tptpQuote x = "\"" <> BS.concatMap go x <> "\""
     where
       go '\\' = "\\\\"
       go '"'  = "\\\""
-      go c = [c]
+      go c = BS.singleton c
+
+tptpSQuote' :: BS.ByteString -> BS.ByteString
+tptpSQuote' x = "'" <> BS.concatMap go x <> "'"
+    where
+      go '\\' = "\\\\"
+      go '\''  = "\\'"
+      go c = BS.singleton c
 
 tptpSQuote :: [Char] -> [Char]
 tptpSQuote x = "'" ++ concatMap go x ++ "'"
@@ -192,10 +200,14 @@ isReallyAlnum x = isBetween 'a' x 'z' || isBetween 'A' x 'Z' || isBetween '0' x 
 isLowerWord :: [Char] -> Bool
 isLowerWord str = case str of
                                (x:xs) | isBetween 'a' x 'z' && all isReallyAlnum xs -> True
+
+isLowerWord' :: BS.ByteString -> Bool
+isLowerWord' str = case BS.uncons str of
+                               Just (x, xs) | isBetween 'a' x 'z' && BS.all isReallyAlnum xs -> True
                                _ -> False
 
 instance ToTPTP V where
-    toTPTPBuilder (V x) = Builder.stringUtf8 x
+    toTPTPBuilder (V' x) = Builder.byteString x
 
 
 showsRational :: Rational -> Builder.Builder
