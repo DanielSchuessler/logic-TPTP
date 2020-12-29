@@ -37,8 +37,9 @@ author: Daniel Schüssler
 extra-source-files: testing/compileTests.sh
                     changelog.markdown
 
-tested-with: GHC==8.8.2
-tested-with: GHC==8.6.4
+tested-with: GHC==8.10.2
+tested-with: GHC==8.8.4
+tested-with: GHC==8.6.5
 tested-with: GHC==8.4.4
 tested-with: GHC==8.2.2
 tested-with: GHC==8.0.2
