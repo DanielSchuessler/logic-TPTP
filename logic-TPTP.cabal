@@ -44,7 +44,6 @@ tested-with: GHC==8.4.4
 tested-with: GHC==8.2.2
 tested-with: GHC==8.0.2
 tested-with: GHC==7.10.3
-tested-with: GHC==7.8.4
 
 source-repository head
  type: git
@@ -60,8 +59,9 @@ Flag BuildTestPrograms
 Library
  ghc-options: -Wall -O2
 
- build-depends:      base >=4 && < 5
+ build-depends:      base >=4.8 && < 5
                    , array
+                   , bytestring
                    , syb
                    , containers
                    , ansi-wl-pprint
@@ -71,6 +71,7 @@ Library
                    , semigroups
                    , transformers
                    , transformers-compat >= 0.5
+                   , utf8-string
 
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base
@@ -96,6 +97,7 @@ Executable TestImportExportImportFile
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , base
+                  , bytestring
                   , ansi-wl-pprint
                   , optparse-applicative >=0.11 && <0.17
                   , pcre-light
@@ -113,6 +115,7 @@ Test-suite TestImportExportRandom
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , base
+                  , bytestring
                   , ansi-wl-pprint
                   , pcre-light
                   , QuickCheck

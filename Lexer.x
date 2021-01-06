@@ -1,4 +1,5 @@
 {
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS -fno-warn-missing-signatures #-}
 {-# OPTIONS -fno-warn-unused-matches #-}
 {-# OPTIONS -fno-warn-name-shadowing #-}
@@ -6,9 +7,10 @@
 
 module Lexer where
 import Data.Ratio
+import qualified Data.ByteString.Lazy.Char8 as BL
 }
 
-%wrapper "posn"
+%wrapper "posn-bytestring"
 
 $sign = [\+\-]
 $exponent = [Ee]
@@ -43,10 +45,10 @@ tokens :-
   ")"                                          { withPos $ const RP }
   ","                                          { withPos $ const Comma }
   "!="|"="|"<=>"|"<="|"=>"|"<~>"|"&"|"|"
-      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos $ Oper }
+      |"~|"|"~&"|"!"|"?"|":"|"~"               { withPos Oper }
   "."                                          { withPos $ const Dot }
-  ("%"|"#")$printable_char*                    { withPos $ CommentToken } -- comment line
-  "/*" @not_star_slash "*"("*"*)"/"            { withPos $ CommentToken } -- comment block
+  ("%"|"#")$printable_char*                    { withPos CommentToken } -- comment line
+  "/*" @not_star_slash "*"("*"*)"/"            { withPos CommentToken } -- comment block
   [\'] @sq_char* [\']                          { withPos SingleQuoted }
   [\"] @do_char* [\"]                          { withPos DoubleQuoted }
   $dollar $dollar $lower_alpha $alpha_numeric* { withPos DollarDollarWord }
@@ -67,7 +69,7 @@ tokens :-
 
 
 {
--- Each action has type :: String -> Token
+-- Each action has type :: BL.ByteString -> Token
 
 withPos f pos s = (pos, f s)
 
@@ -79,57 +81,63 @@ data Token =
          | Dot
          | Lbrack
          | Rbrack
-         | Oper String
-         | SingleQuoted String
-         | DoubleQuoted String
-         | DollarWord String
-         | DollarDollarWord String
-         | UpperWord String
-         | LowerWord String
+         | Oper BL.ByteString
+         | SingleQuoted BL.ByteString
+         | DoubleQuoted BL.ByteString
+         | DollarWord BL.ByteString
+         | DollarDollarWord BL.ByteString
+         | UpperWord BL.ByteString
+         | LowerWord BL.ByteString
          | Star
          | Plus
          | Rangle
          | SignedInt Integer
          | UnsignedInt Integer
          | Real Rational
-         | CommentToken String
+         | CommentToken BL.ByteString
          | Slash
     deriving (Eq,Ord,Show)
 
 -- alex defines: alexScanTokens
 
-stripPlus :: String -> String
-stripPlus ('+':xs) = xs
-stripPlus xs = xs
+stripPlus :: BL.ByteString -> BL.ByteString
+stripPlus xs =
+    case BL.uncons xs of
+        Just ('+', xs') -> xs'
+        _ -> xs
 
+readDecimalFraction :: BL.ByteString -> Rational
+readDecimalFraction cs =
+    case BL.uncons cs of
+        Just ('-', cs') -> -(readUnsignedDecimalFraction cs')
+        _ -> readUnsignedDecimalFraction cs
 
-readDecimalFraction :: String -> Rational
-readDecimalFraction ('-':cs) = -(readUnsignedDecimalFraction cs)
-readDecimalFraction cs = readUnsignedDecimalFraction cs
+readInteger :: BL.ByteString -> Integer
+readInteger s =
+    case BL.readInteger s of
+        Nothing -> error "no parse"
+        Just (i, _) -> i
 
-readInteger :: String -> Integer
-readInteger = read
-
-
-readUnsignedDecimalFraction :: String -> Rational
+readUnsignedDecimalFraction :: BL.ByteString -> Rational
 readUnsignedDecimalFraction cs =
-    case break (=='.') cs of
-         (_,"") -> case breakExponent cs of
-                        (cs2,_:cs2') -> readIntegerRat cs2 * readExponent cs2'
-
-         (cs1,_:cs1') -> case breakExponent cs1' of
-                            (_,"") -> readIntegerRat cs1 + readFraction cs1'
-                            (cs2,_:cs2') -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2'
+    case BL.break (=='.') cs of
+         (_, BL.uncons -> Nothing) ->
+             case breakExponent cs of
+                 (cs2, BL.uncons -> Just (_, cs2')) -> readIntegerRat cs2 * readExponent cs2'              
+         (cs1, BL.uncons -> Just (_, cs1')) ->
+             case breakExponent cs1' of
+                 (_, BL.uncons -> Nothing) -> readIntegerRat cs1 + readFraction cs1'
+                 (cs2, BL.uncons -> Just (_, cs2')) -> (readIntegerRat cs1 + readFraction cs2) * readExponent cs2'
   where
-    breakExponent = break (`elem` "Ee")
+    breakExponent = BL.break (`elem` "Ee")
 
-    readExponent :: String -> Rational
+    readExponent :: BL.ByteString -> Rational
     readExponent = (10^^) . readInteger . stripPlus
 
-    readFraction :: String -> Rational
-    readFraction cs = readInteger cs % (10^(length cs))
+    readFraction :: BL.ByteString -> Rational
+    readFraction cs = readInteger cs % (10^(BL.length cs))
 
-    readIntegerRat :: String -> Rational
+    readIntegerRat :: BL.ByteString -> Rational
     readIntegerRat = fromIntegral . readInteger
 
 

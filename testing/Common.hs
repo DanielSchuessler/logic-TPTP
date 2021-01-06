@@ -4,9 +4,11 @@
 
 module Common where
 
+import qualified Data.ByteString.Char8 as BS
 import Data.Monoid
 import qualified Data.Semigroup as Semigroup
 import Text.PrettyPrint.ANSI.Leijen
+import qualified Text.Regex.PCRE.Light as PCRE
 import Text.Regex.PCRE.Light.Char8
 import Codec.TPTP
 
@@ -53,3 +55,8 @@ findUnsupportedFormulaType ::  String -> Maybe String
 findUnsupportedFormulaType =
     let re = compile "^(thf|tff)\\(" [multiline]
     in (\x -> (!!1) `fmap` match re x [])
+
+findUnsupportedFormulaTypeByteString ::  BS.ByteString -> Maybe BS.ByteString
+findUnsupportedFormulaTypeByteString =
+    let re = PCRE.compile (BS.pack "^(thf|tff)\\(") [multiline]
+    in (\x -> (!!1) `fmap` PCRE.match re x [])
