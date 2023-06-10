@@ -1,0 +1,47 @@
+name: Haskell CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ghc: ['8.6.5', '8.8.4', '8.10.7', '9.0.1', '9.2.1']
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: haskell/actions/setup@v1
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: '3.2'
+
+    - name: Cache
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-cabal
+      with:
+        path: ~/.cabal
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install dependencies
+      run: |
+        cabal update
+        cabal configure --enable-tests --enable-benchmarks --flags="BuildTestPrograms"
+        cabal build --only-dependencies
+    - name: Build
+      run: cabal build all
+    - name: Run tests
+      run: cabal test all
+    - name: Run TPTP test
+      run: |
+        curl -L -o TPTP-v7.5.0.tgz http://www.tptp.org/TPTP/Distribution/TPTP-v7.5.0.tgz
+        tar zxf TPTP-v7.5.0.tgz
+        find -H TPTP-v7.5.0/Problems -type f -name "*.p" -size -512k | cabal run TestImportExportImportFile -- False --print-failure-only
