@@ -13,7 +13,7 @@ import Data.Ratio
 
 -- | Convenient wrapper for 'toTPTP'
 toTPTP' :: forall a. (ToTPTP a) => a -> String
-toTPTP' = ($"") . toTPTP
+toTPTP' = ($ "") . toTPTP
 
 s :: String -> String -> String
 s = showString
