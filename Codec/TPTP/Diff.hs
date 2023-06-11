@@ -20,6 +20,7 @@ import Test.QuickCheck hiding((.&.))
 import Codec.TPTP.Base
 import Codec.TPTP.Pretty
 import Text.PrettyPrint.ANSI.Leijen
+import Control.Monad
 import Control.Monad.Identity
 
 
