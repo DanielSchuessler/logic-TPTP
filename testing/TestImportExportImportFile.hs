@@ -3,7 +3,8 @@ module Main where
 
 import Control.Monad
 import Data.Monoid
-import Text.PrettyPrint.ANSI.Leijen hiding ((<$>))
+import Prettyprinter
+import Prettyprinter.Render.Terminal
 import System.Exit
 import Common
 import Options.Applicative
@@ -49,7 +50,7 @@ diff_once_twice print_export print_failure_only infilename'  = do
   case findUnsupportedFormulaType input of
      Just x -> do
        unless print_failure_only $ 
-         putStrLn . prettySimple . yellow . text $ ("Skipping unsupported formula type "++x)
+         putStrLn . prettySimple . annotate (color Yellow) . text $ ("Skipping unsupported formula type "++x)
      Nothing -> do
 
       let once = parse input
@@ -58,7 +59,7 @@ diff_once_twice print_export print_failure_only infilename'  = do
         putStrLn $ "new tptp = " ++tptp
       let twice = parse tptp
       let dif = mconcat (zipWith diffAFormula once twice)
-      let success = (putStrLn . prettySimple . dullgreen . text $ "Ok")
+      let success = (putStrLn . prettySimple . annotate (colorDull Green) . text $ "Ok")
 
       -- case dif of
       --   OtherSame -> success
@@ -74,3 +75,6 @@ diff_once_twice print_export print_failure_only infilename'  = do
            when print_failure_only $ putStrLn infilename'
            putStrLn . prettySimple $ dif
            exitWith (ExitFailure 1)
+
+text :: String -> Doc ann
+text = pretty

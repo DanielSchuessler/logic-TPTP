@@ -8,7 +8,7 @@
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
 -- | Mainly just 'Pretty' instances
-module Codec.TPTP.Pretty(prettySimple,WithEnclosing(..),Enclosing(..)) where
+module Codec.TPTP.Pretty(PrettyAnsi(..),prettySimple,WithEnclosing(..),Enclosing(..)) where
 
 #if MIN_VERSION_base(4,8,0)
 import Prelude hiding ((<$>))
@@ -16,34 +16,50 @@ import Prelude hiding ((<$>))
 
 import Codec.TPTP.Base
 import Codec.TPTP.Export
-import Text.PrettyPrint.ANSI.Leijen
+import Prettyprinter
+import Prettyprinter.Render.Terminal
 import Data.Data
 import Control.Monad.Identity
 import Data.Ratio
+import qualified Data.Text.Lazy as TL
 
-oper :: String -> Doc
-oper = dullyellow . text
-psym :: forall a. (Pretty a) => a -> Doc
-psym = green . pretty
-fsym :: forall a. (Pretty a) => a -> Doc
-fsym = yellow . pretty
+class PrettyAnsi a where
+  prettyAnsi :: a -> Doc AnsiStyle
+  prettyAnsiList :: [a] -> Doc AnsiStyle
+  prettyAnsiList = align . list . map prettyAnsi
+
+instance PrettyAnsi (Doc AnsiStyle) where
+  prettyAnsi = id
+
+instance PrettyAnsi a => PrettyAnsi [a] where
+  prettyAnsi = prettyAnsiList
+
+oper :: String -> Doc AnsiStyle
+oper = annotate (colorDull Yellow) . text
+psym :: forall a. (Pretty a) => a -> Doc AnsiStyle
+psym = annotate (color Green) . pretty
+fsym :: forall a. (Pretty a) => a -> Doc AnsiStyle
+fsym = annotate (color Yellow) . pretty
+
+text :: String -> Doc ann
+text = pretty
 
 --wtext :: String -> Doc
---wtext = white . text
+--wtext = annotate (color White) . text
 
-prettyargs :: forall a. (Pretty a) => [a] -> Doc
+prettyargs :: forall a. (PrettyAnsi a) => [a] -> Doc AnsiStyle
 --prettyargs = encloseSep (wtext "(") (wtext ")") (wtext ",") . fmap pretty
-prettyargs = tupled . fmap pretty
--- prettyargs [] = white $ text "()"
+prettyargs = tupled . fmap prettyAnsi
+-- prettyargs [] = annotate (color White) $ text "()"
 -- prettyargs (x:xs) =
---     let pxs = fmap ((white (text ",") <+>) . pretty) xs in
+--     let pxs = fmap ((annotate (color White) (text ",") <+>) . pretty) xs in
 
---     align (fillSep $ [    white (text "(") <+> pretty x ]
+--     align (fillSep $ [    annotate (color White) (text "(") <+> pretty x ]
 --                     ++ pxs
---                     ++ [ white (text ")") ] )
+--                     ++ [ annotate (color White) (text ")") ] )
 
-prational :: Rational -> Doc
-prational q = (text.show.numerator) q <> char '/' <> (text.show.denominator) q
+prational :: Rational -> Doc ann
+prational q = (text.show.numerator) q <> pretty '/' <> (text.show.denominator) q
 
 -- | Carries information about the enclosing operation (for the purpose of printing stuff without parentheses if possible).
 data WithEnclosing a = WithEnclosing Enclosing a
@@ -87,36 +103,37 @@ needsParens inner outer =
                EnclNothing -> (-1000) -- if there's no enclosing operation, we don't need parentheses
 
 
-maybeParens :: Enclosing -> Enclosing -> Doc -> Doc
+maybeParens :: Enclosing -> Enclosing -> Doc ann -> Doc ann
 maybeParens inner outer | needsParens inner outer = parens
 maybeParens _ _ = id
 
-instance Pretty TPTP_Input where
-    pretty AFormula{..}
-        = (text) "Formula " <+> (dullwhite.text) "name:"
-          </>
-          vsep
-          [
-            (red.pretty) name <+> dullwhite (text "role:") <+> (magenta.text.unrole) role
-          , pretty formula
-          , pretty annotations
-          ,empty
+instance PrettyAnsi TPTP_Input where
+    prettyAnsi AFormula{..}
+        = fillSep
+          [ (text) "Formula " <+> (annotate (colorDull White).text) "name:"
+          , vsep
+            [
+              (annotate (color Red).pretty) name <+> annotate (colorDull White) (text "role:") <+> (annotate (color Magenta).text.unrole) role
+            , prettyAnsi formula
+            , prettyAnsi annotations
+            , mempty
+            ]
           ]
 
-    pretty (Comment str)
-        = magenta . string $ str
+    prettyAnsi (Comment str)
+        = annotate (color Magenta) . pretty $ str
 
-    pretty (Include f sel) = text "include" <> parens (squotes (text f) <> (case sel of { [] -> empty; _ -> comma <+> sep (punctuate comma (fmap pretty sel)) } ))
+    prettyAnsi (Include f sel) = text "include" <> parens (squotes (text f) <> (case sel of { [] -> mempty; _ -> comma <+> sep (punctuate comma (fmap pretty sel)) } ))
 
 
-    prettyList = foldr (\x xs -> pretty x <$> xs) empty
+    prettyAnsiList = foldr (\x xs -> vsep [prettyAnsi x, xs]) mempty
 
-instance Pretty Quant where
-    pretty All = oper "∀"
-    pretty Exists = oper "∃"
+instance PrettyAnsi Quant where
+    prettyAnsi All = oper "∀"
+    prettyAnsi Exists = oper "∃"
 
-instance (Pretty (WithEnclosing t), Pretty (WithEnclosing f)) => Pretty ((WithEnclosing (Formula0 t f))) where
-    pretty (WithEnclosing enclosing formu) =
+instance (PrettyAnsi (WithEnclosing t), PrettyAnsi (WithEnclosing f)) => PrettyAnsi ((WithEnclosing (Formula0 t f))) where
+    prettyAnsi (WithEnclosing enclosing formu) =
         let
             newEnclosing =
              case formu of
@@ -134,25 +151,27 @@ instance (Pretty (WithEnclosing t), Pretty (WithEnclosing f)) => Pretty ((WithEn
           case formu of
 
             Quant q vars f ->
-               pretty q
-               <+> brackets (hsep (punctuate comma (fmap pretty vars)))
-               <> dot
-               </> pretty (wne f)
+               fillSep
+               [ prettyAnsi q
+                 <+> brackets (hsep (punctuate comma (fmap prettyAnsi vars)))
+                 <> dot
+               , prettyAnsi (wne f)
+               ]
 
-            (:~:) f -> oper "¬" <+> pretty (wne f)
+            (:~:) f -> oper "¬" <+> prettyAnsi (wne f)
 
             PredApp p [] -> psym p
             PredApp p args -> psym p <> prettyargs (fmap wne args)
 
 
             BinOp f1 op f2 ->
-                align $ sep [indent 0 $ pretty (wne f1), pretty op, indent 0 $ pretty (wne f2)]
+                align $ sep [indent 0 $ prettyAnsi (wne f1), prettyAnsi op, indent 0 $ prettyAnsi (wne f2)]
 
             InfixPred f1 op f2 ->
-                align $ sep [indent 0 $ pretty (wne f1), pretty op, indent 0 $ pretty (wne f2)]
+                align $ sep [indent 0 $ prettyAnsi (wne f1), prettyAnsi op, indent 0 $ prettyAnsi (wne f2)]
 
-instance Pretty BinOp where
-    pretty x = case x of
+instance PrettyAnsi BinOp where
+    prettyAnsi x = case x of
         (:<=>:) -> oper "⇔"
         (:=>:)  -> oper "⇒"
         (:<=:)  -> oper "⇐"
@@ -162,78 +181,79 @@ instance Pretty BinOp where
         (:~|:)  -> oper "NOR"
         (:<~>:) -> oper "XOR"
 
-instance Pretty InfixPred where
-    pretty x = case x of
+instance PrettyAnsi InfixPred where
+    prettyAnsi x = case x of
         (:=:)   -> oper "="
         (:!=:)  -> oper "≠"
 
-instance (Pretty (WithEnclosing t)) => Pretty (WithEnclosing (Term0 t)) where
-    pretty (WithEnclosing _ x) =
+instance (PrettyAnsi (WithEnclosing t)) => PrettyAnsi (WithEnclosing (Term0 t)) where
+    prettyAnsi (WithEnclosing _ x) =
         case x of
-          Var s -> pretty s
+          Var s -> prettyAnsi s
           NumberLitTerm d -> prational d
-          DistinctObjectTerm s -> cyan (dquotes (text s))
+          DistinctObjectTerm s -> annotate (color Cyan) (dquotes (text s))
           FunApp f [] -> fsym f
           FunApp f args -> fsym f <> prettyargs (fmap (WithEnclosing EnclNothing) args)
 
 
 
-instance Pretty (Formula0 Term Formula) where
-    pretty = pretty . WithEnclosing EnclNothing . F . Identity
+instance PrettyAnsi (Formula0 Term Formula) where
+    prettyAnsi = prettyAnsi . WithEnclosing EnclNothing . F . Identity
 
-instance Pretty (Term0 Term) where
-    pretty = pretty . WithEnclosing EnclNothing . T . Identity
+instance PrettyAnsi (Term0 Term) where
+    prettyAnsi = prettyAnsi . WithEnclosing EnclNothing . T . Identity
 
-instance Pretty (WithEnclosing Formula) where
-    pretty (WithEnclosing x (F (Identity y))) = pretty (WithEnclosing x y)
+instance PrettyAnsi (WithEnclosing Formula) where
+    prettyAnsi (WithEnclosing x (F (Identity y))) = prettyAnsi (WithEnclosing x y)
 
-instance Pretty (WithEnclosing Term) where
-    pretty (WithEnclosing x (T (Identity y))) = pretty (WithEnclosing x y)
+instance PrettyAnsi (WithEnclosing Term) where
+    prettyAnsi (WithEnclosing x (T (Identity y))) = prettyAnsi (WithEnclosing x y)
 
-deriving instance Pretty Formula
-deriving instance Pretty Term
-deriving instance Pretty a => Pretty (Identity a)
+deriving instance PrettyAnsi Formula
+deriving instance PrettyAnsi Term
+deriving instance PrettyAnsi a => PrettyAnsi (Identity a)
 
--- instance (Pretty f, Pretty t) => Pretty (Formula0 t f) where
+-- instance (Pretty f, Pretty t) => PrettyAnsi (Formula0 t f) where
 --     pretty = pretty . WithEnclosing ""
 
 -- instance (Pretty t) => Pretty (Term0 t) where
 --     pretty = pretty . WithEnclosing ""
 
-prettySimple :: Pretty a => a -> String
-prettySimple x = displayS (renderPretty 0.9 80 (pretty x)) ""
-
-instance Pretty Annotations where
-    pretty NoAnnotations = dullwhite . text $ "NoAnnotations"
-    pretty (Annotations a b) = dullwhite (text "SourceInfo: ") <+> pretty a <+> pretty b
-
-instance Pretty UsefulInfo where
-    pretty NoUsefulInfo = empty
-    pretty (UsefulInfo x) = dullwhite (text "UsefulInfo: ") <+> pretty x
+prettySimple :: PrettyAnsi a => a -> String
+prettySimple x = TL.unpack $ renderLazy $ layoutSmart LayoutOptions{ layoutPageWidth = AvailablePerLine 80 0.9 } $ prettyAnsi x
 
 
+instance PrettyAnsi Annotations where
+    prettyAnsi NoAnnotations = annotate (colorDull White) . text $ "NoAnnotations"
+    prettyAnsi (Annotations a b) = annotate (colorDull White) (text "SourceInfo: ") <+> prettyAnsi a <+> prettyAnsi b
 
-instance Pretty GData where
-    pretty (GWord x) = pretty x
-    pretty (GNumber x) = prational x
-    pretty (GDistinctObject x) = cyan (dquotes (text x))
-    pretty (GApp x []) = fsym x
-    pretty (GApp x args) = fsym x <+> prettyargs args
-    pretty (GFormulaData s f) = text s <> align (parens (pretty f))
-    pretty (GFormulaTerm s t) = text s <> align (parens (pretty t))
-    pretty (GVar x) = pretty x
+instance PrettyAnsi UsefulInfo where
+    prettyAnsi NoUsefulInfo = mempty
+    prettyAnsi (UsefulInfo x) = annotate (colorDull White) (text "UsefulInfo: ") <+> prettyAnsi x
+
+
+
+instance PrettyAnsi GData where
+    prettyAnsi (GWord x) = pretty x
+    prettyAnsi (GNumber x) = prational x
+    prettyAnsi (GDistinctObject x) = annotate (color Cyan) (dquotes (text x))
+    prettyAnsi (GApp x []) = fsym x
+    prettyAnsi (GApp x args) = fsym x <+> prettyargs args
+    prettyAnsi (GFormulaData s f) = text s <> align (parens (prettyAnsi f))
+    prettyAnsi (GFormulaTerm s t) = text s <> align (parens (prettyAnsi t))
+    prettyAnsi (GVar x) = prettyAnsi x
 
 instance Pretty AtomicWord where
     pretty (AtomicWord x) = (if isLowerWord x then text else squotes.text) x
 
-instance Pretty GTerm where
-    pretty (GTerm x) = pretty x
-    pretty (ColonSep x y) = pretty x <+> oper ":" <+> pretty y
-    pretty (GList xs) = let f = oper
-                        in
-                          f "[" <+> (fillSep . punctuate comma . fmap pretty) xs <+> f "]"
+instance PrettyAnsi GTerm where
+    prettyAnsi (GTerm x) = prettyAnsi x
+    prettyAnsi (ColonSep x y) = prettyAnsi x <+> oper ":" <+> prettyAnsi y
+    prettyAnsi (GList xs) = let f = oper
+                            in
+                              f "[" <+> (fillSep . punctuate comma . fmap prettyAnsi) xs <+> f "]"
 
 
 
-instance Pretty V where
-    pretty (V x) = blue . text $ x
+instance PrettyAnsi V where
+    prettyAnsi (V x) = annotate (color Blue) . text $ x

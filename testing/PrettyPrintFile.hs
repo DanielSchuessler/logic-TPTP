@@ -19,7 +19,6 @@ import Debug.Trace
 import Data.Generics
 import Test.QuickCheck
 import Data.Monoid
-import Text.PrettyPrint.ANSI.Leijen
 import System.Exit
 import Text.Regex.PCRE.Light.Char8
 
