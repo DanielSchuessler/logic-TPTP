@@ -42,6 +42,6 @@ jobs:
       run: cabal test all
     - name: Run TPTP test
       run: |
-        curl -L -o TPTP-v7.5.0.tgz https://www.tptp.org/TPTP/Archive/TPTP-v7.5.0.tgz
+        curl -L -o TPTP-v7.5.0.tgz https://tptp.org/TPTP/Archive/TPTP-v7.5.0.tgz
         tar zxf TPTP-v7.5.0.tgz
         find -H TPTP-v7.5.0/Problems -type f -name "*.p" -size -512k | cabal run TestImportExportImportFile -- False --print-failure-only
