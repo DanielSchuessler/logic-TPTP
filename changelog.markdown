@@ -1,3 +1,9 @@
+## 0.5.1.0
+
+* Fix compilation error with `mtl >=2.3`
+* Fix an `-Woperator-whitespace-ext-conflict` warning
+* Fix cabal warnings
+
 ## 0.5.0.0
 
 * Add `GFormulaTerm` constructor to `GData` and support `$fot` `formula_data` (#1, #2, #19, thanks to @agomezl)
