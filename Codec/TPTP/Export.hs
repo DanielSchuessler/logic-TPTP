@@ -2,7 +2,7 @@
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, RankNTypes
+  , RankNTypes
   #-}
 {-# OPTIONS -Wall #-}
 module Codec.TPTP.Export(toTPTP',ToTPTP(..),isLowerWord) where

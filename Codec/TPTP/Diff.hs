@@ -2,7 +2,7 @@
   , StandaloneDeriving, MultiParamTypeClasses, FunctionalDependencies
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, OverloadedStrings, RankNTypes
+  , OverloadedStrings, RankNTypes
   #-}
 {-# OPTIONS -Wall #-}
 
@@ -195,10 +195,10 @@ diffFormula (F (Identity f1)) (F (Identity f2)) = F $
       _ -> let plug=plugSubformulae (T DontCare) (F DontCare) in Differ (plug f1) (plug f2)
 
 
-instance Show (T DiffResult) where
+instance {-# OVERLAPPING #-} Show (T DiffResult) where
     show (T t) = show t
 
-instance Show (F DiffResult) where
+instance {-# OVERLAPPING #-} Show (F DiffResult) where
     show (F f) = show f
 
 type T0Diff = DiffResult (Term0 (T DiffResult))

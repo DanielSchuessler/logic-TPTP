@@ -2,7 +2,7 @@
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, ScopedTypeVariables
+  , ScopedTypeVariables
   #-}
 
 module Codec.TPTP.Base where

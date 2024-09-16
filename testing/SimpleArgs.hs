@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 -- Copied and modified from https://hackage.haskell.org/package/simpleargs-0.2.1
 -- which is licensed under GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
