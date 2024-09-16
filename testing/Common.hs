@@ -6,7 +6,8 @@ module Common where
 
 import Data.Monoid
 import qualified Data.Semigroup as Semigroup
-import Text.PrettyPrint.ANSI.Leijen
+import Prettyprinter
+import Prettyprinter.Render.Terminal
 import Text.Regex.PCRE.Light.Char8
 import Codec.TPTP
 
@@ -28,14 +29,14 @@ instance Monoid AFormulaComparison where
     mappend = (Semigroup.<>)
 #endif
 
-instance Pretty AFormulaComparison where
-    pretty (OtherSame) = dullgreen.text$"OtherSame"
-    pretty (OtherDiff x y) = sep
-                             [dullred.text$"OtherDiff"
+instance PrettyAnsi AFormulaComparison where
+    prettyAnsi (OtherSame) = annotate (colorDull Green).pretty$"OtherSame"
+    prettyAnsi (OtherDiff x y) = sep
+                             [annotate (colorDull Red).pretty$"OtherDiff"
                              ,pretty x
                              ,pretty y
                              ]
-    pretty (FormulaDiff fd) = pretty fd
+    prettyAnsi (FormulaDiff fd) = prettyAnsi fd
 
 compareOther ::  (Eq a, Show a) => a -> a -> AFormulaComparison
 compareOther x y = if x==y then OtherSame else OtherDiff (show x) (show y)
