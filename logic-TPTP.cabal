@@ -60,7 +60,7 @@ Flag BuildTestPrograms
 Library
  ghc-options: -Wall -O2
 
- build-depends:      base >=4 && < 5
+ build-depends:      base >=4.8.0.0 && < 5
                    , array
                    , syb
                    , containers
@@ -101,8 +101,6 @@ Executable TestImportExportImportFile
                   , optparse-applicative >=0.11 && <0.19
                   , pcre-light
                   , semigroups
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
  if !flag(BuildTestPrograms)
@@ -121,8 +119,6 @@ Test-suite TestImportExportRandom
                   , semigroups
                   , transformers
                   , transformers-compat >= 0.5
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
 
@@ -142,8 +138,6 @@ Executable PrettyPrintFile
                   , QuickCheck
                   , semigroups
                   , syb
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
  if !flag(BuildTestPrograms)
@@ -165,8 +159,6 @@ Executable ParseRandom
                   , QuickCheck
                   , semigroups
                   , syb
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
  if !flag(BuildTestPrograms)
