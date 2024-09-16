@@ -34,10 +34,6 @@ import Data.Copointed
 import Control.Monad.Trans.Instances () -- Import Eq,Ord,Show,Read,Data,Typeable orphan instances for Data.Functor.Identity from transformers-compat package
 #endif
 
-#if !MIN_VERSION_base(4,7,0)
-import Util
-#endif
-
 -- * Basic undecorated formulae and terms
 
 -- | Basic (undecorated) first-order formulae
@@ -258,15 +254,8 @@ deriving instance Ord (c (Formula0 (T c) (F c))) => Ord (TPTP_Input_ c)
 deriving instance Show (c (Formula0 (T c) (F c))) => Show (TPTP_Input_ c)
 deriving instance Read (c (Formula0 (T c) (F c))) => Read (TPTP_Input_ c)
 
-
-#if MIN_VERSION_base(4,7,0)
 deriving instance (Typeable c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
 deriving instance Typeable TPTP_Input_
-#else
-deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (TPTP_Input_ c)
-instance Typeable1 c => Typeable (TPTP_Input_ c) where
-  typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "TPTP_Input_"
-#endif
 
 -- | Annotations about the formulas origin
 data Annotations = NoAnnotations | Annotations GTerm UsefulInfo
@@ -607,22 +596,11 @@ DI(Ord)
 DI(Show)
 DI(Read)
 
-#if MIN_VERSION_base(4,7,0)
 deriving instance Typeable F
 deriving instance Typeable T
 
 deriving instance (Typeable c, Data (c (Term0 (T c)))) => Data (T c)
 deriving instance (Typeable c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
-#else
-instance Typeable1 c => Typeable (F c) where
-    typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "F"
-
-instance Typeable1 c => Typeable (T c) where
-    typeOf = mkTypeOfForRank2Kind "Codec.TPTP.Base" "T"
-
-deriving instance (Typeable1 c, Data (c (Term0 (T c)))) => Data (T c)
-deriving instance (Typeable1 c, Data (c (Formula0 (T c) (F c)))) => Data (F c)
-#endif
 
 -- * Utility functions
 
