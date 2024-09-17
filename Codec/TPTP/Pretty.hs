@@ -2,7 +2,7 @@
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, RankNTypes, PatternGuards
+  , RankNTypes, PatternGuards
   #-}
 
 {-# OPTIONS -Wall -fno-warn-orphans #-}
@@ -10,9 +10,7 @@
 -- | Mainly just 'Pretty' instances
 module Codec.TPTP.Pretty(prettySimple,WithEnclosing(..),Enclosing(..)) where
 
-#if MIN_VERSION_base(4,8,0)
 import Prelude hiding ((<$>))
-#endif
 
 import Codec.TPTP.Base
 import Codec.TPTP.Export

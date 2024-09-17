@@ -2,7 +2,7 @@
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, RankNTypes, PatternGuards
+  , RankNTypes, PatternGuards
   #-}
 {-# OPTIONS -Wall #-}
 module Codec.TPTP.QuickCheck where
