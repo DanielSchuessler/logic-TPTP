@@ -69,8 +69,7 @@ Library
                    , mtl
                    , pointed
                    , semigroups
-                   , transformers
-                   , transformers-compat >= 0.5
+                   , transformers >= 0.5
 
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base
@@ -118,7 +117,6 @@ Test-suite TestImportExportRandom
                   , QuickCheck
                   , semigroups
                   , transformers
-                  , transformers-compat >= 0.5
  default-language:  Haskell2010
  other-extensions:  CPP
 

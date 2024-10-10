@@ -30,9 +30,6 @@ import Prelude --hiding(concat,foldl,foldl1,foldr,foldr1)
 import Test.QuickCheck hiding ((.&.))
 import Data.Pointed
 import Data.Copointed
-#if !MIN_VERSION_transformers(0,4,0)
-import Control.Monad.Trans.Instances () -- Import Eq,Ord,Show,Read,Data,Typeable orphan instances for Data.Functor.Identity from transformers-compat package
-#endif
 
 -- * Basic undecorated formulae and terms
 
