@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, NoMonomorphismRestriction, RecordWildCards
+{-# LANGUAGE NoMonomorphismRestriction, RecordWildCards
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
