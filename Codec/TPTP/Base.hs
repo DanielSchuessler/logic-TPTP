@@ -7,14 +7,6 @@
 
 module Codec.TPTP.Base where
 
-#ifndef MIN_VERSION_transformers
-#define MIN_VERSION_transformers(a,b,c) 1
-#endif
-#ifndef MIN_VERSION_base
-#define MIN_VERSION_base(a,b,c) 1
-#endif
--- Assume we are using the newest versions when using ghci without cabal
-
 import Codec.TPTP.QuickCheck
 import Control.Applicative
 import Control.Monad
