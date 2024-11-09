@@ -4,7 +4,6 @@
 
 module Common where
 
-import Data.Monoid
 import qualified Data.Semigroup as Semigroup
 import Text.PrettyPrint.ANSI.Leijen
 import Text.Regex.PCRE.Light.Char8

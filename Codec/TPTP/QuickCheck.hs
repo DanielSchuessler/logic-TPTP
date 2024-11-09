@@ -9,7 +9,6 @@ module Codec.TPTP.QuickCheck where
 
 import Test.QuickCheck
 import Control.Monad
-import Control.Applicative
 import Data.Char
 import Data.Array.ST
 import Data.Array.IArray
