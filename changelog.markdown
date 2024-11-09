@@ -1,6 +1,7 @@
 ## 0.6.0.0
 
 * migrate to `prettyprinter` package family from `ansi-wl-pprint` package
+* Use `Writer` moand instead of `State` to annotate comments
 
 ## 0.5.1.0
 
