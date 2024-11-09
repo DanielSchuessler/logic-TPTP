@@ -1,3 +1,7 @@
+## 0.6.0.0
+
+* migrate to `prettyprinter` package family from `ansi-wl-pprint` package
+
 ## 0.5.1.0
 
 * Fix compilation error with `mtl >=2.3`
