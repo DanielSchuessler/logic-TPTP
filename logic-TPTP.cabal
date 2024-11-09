@@ -1,5 +1,5 @@
 name: logic-TPTP
-version: 0.5.0.0
+version: 0.5.1.0
 cabal-version: >= 1.10
 build-type: Simple
 license: GPL
@@ -8,7 +8,7 @@ maintainer: Ahn, Ki Yung <kya@pdx.edu>, Daniel Schüssler <daniels@community.has
 bug-reports: http://github.com/DanielSchuessler/logic-TPTP/issues
 synopsis: Import, export etc. for TPTP, a syntax for first-order logic
 description:
- For information about the TPTP format, see <http://www.cs.miami.edu/~tptp/>.
+ For information about the TPTP format, see <https://www.tptp.org/>.
  .
  Components:
  .
@@ -37,8 +37,9 @@ author: Daniel Schüssler
 extra-source-files: testing/compileTests.sh
                     changelog.markdown
 
-tested-with: GHC==9.6.2
-tested-with: GHC==9.4.5
+tested-with: GHC==9.8.2
+tested-with: GHC==9.6.6
+tested-with: GHC==9.4.8
 tested-with: GHC==9.2.8
 tested-with: GHC==9.0.2
 tested-with: GHC==8.10.7
@@ -59,7 +60,7 @@ Flag BuildTestPrograms
 Library
  ghc-options: -Wall -O2
 
- build-depends:      base >=4 && < 5
+ build-depends:      base >=4.8.0.0 && < 5
                    , array
                    , syb
                    , containers
@@ -70,8 +71,7 @@ Library
                    , mtl
                    , pointed
                    , semigroups
-                   , transformers
-                   , transformers-compat >= 0.5
+                   , transformers >= 0.5
 
  exposed-modules:   Codec.TPTP.Import
                   , Codec.TPTP.Base
@@ -103,8 +103,6 @@ Executable TestImportExportImportFile
                   , optparse-applicative >=0.11 && <0.19
                   , pcre-light
                   , semigroups
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
  if !flag(BuildTestPrograms)
@@ -123,9 +121,6 @@ Test-suite TestImportExportRandom
                   , QuickCheck
                   , semigroups
                   , transformers
-                  , transformers-compat >= 0.5
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
 
@@ -146,8 +141,6 @@ Executable PrettyPrintFile
                   , QuickCheck
                   , semigroups
                   , syb
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
  if !flag(BuildTestPrograms)
@@ -170,8 +163,6 @@ Executable ParseRandom
                   , QuickCheck
                   , semigroups
                   , syb
- if impl(ghc <7.10)
-  build-depends:    pcre-light <0.4.1
  default-language:  Haskell2010
  other-extensions:  CPP
  if !flag(BuildTestPrograms)

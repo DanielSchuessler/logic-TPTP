@@ -2,14 +2,13 @@
   , StandaloneDeriving
   , TypeSynonymInstances, FlexibleInstances, FlexibleContexts
   , UndecidableInstances, DeriveDataTypeable, GeneralizedNewtypeDeriving
-  , OverlappingInstances, RankNTypes, PatternGuards
+  , RankNTypes, PatternGuards
   #-}
 {-# OPTIONS -Wall #-}
 module Codec.TPTP.QuickCheck where
 
 import Test.QuickCheck
 import Control.Monad
-import Control.Applicative
 import Data.Char
 import Data.Array.ST
 import Data.Array.IArray

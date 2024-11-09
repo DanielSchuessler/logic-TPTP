@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ghc: ['8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.8', '9.4.5', '9.6.2']
+        ghc: ['8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.8', '9.4.8', '9.6.6', '9.8.2']
 
     steps:
     - uses: actions/checkout@v2
@@ -42,6 +42,6 @@ jobs:
       run: cabal test all
     - name: Run TPTP test
       run: |
-        curl -L -o TPTP-v7.5.0.tgz https://www.tptp.org/TPTP/Archive/TPTP-v7.5.0.tgz
+        curl -L -o TPTP-v7.5.0.tgz https://tptp.org/TPTP/Archive/TPTP-v7.5.0.tgz
         tar zxf TPTP-v7.5.0.tgz
         find -H TPTP-v7.5.0/Problems -type f -name "*.p" -size -512k | cabal run TestImportExportImportFile -- False --print-failure-only

@@ -5,7 +5,6 @@
  -XNamedFieldPuns
  -XRecordWildCards
  -XDeriveDataTypeable
- -XOverlappingInstances
  -fwarn-incomplete-patterns
  #-}
 

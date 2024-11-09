@@ -4,7 +4,6 @@
 
 module Common where
 
-import Data.Monoid
 import qualified Data.Semigroup as Semigroup
 import Prettyprinter
 import Prettyprinter.Render.Terminal
