@@ -11,7 +11,7 @@ import Codec.TPTP.QuickCheck
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Identity
-import Control.Monad.State
+import Control.Monad.Writer (Writer, runWriter)
 import Data.Data
 import Data.Function
 import Data.Monoid hiding(All)
@@ -34,21 +34,21 @@ type Term = T Identity
 -- * Formulae and terms decorated with state
 
 -- | First-order formulae decorated with state
-type FormulaST s = F (State s)
+type FormulaW s = F (Writer s)
 
 -- | Terms decorated with state
-type TermST s = T (State s)
+type TermW s = T (Writer s)
 
 -- | First-order formulae decorated with comments
-type FormulaC = FormulaST [String]
+type FormulaC = FormulaW [String]
 
 -- | Terms decorated with comments
-type TermC = TermST [String]
+type TermC = TermW [String]
 
 -- | Forget comments in formulae decorated with comments
 forgetFC :: FormulaC -> Formula
 forgetFC (F f) = F . return $
-  case evalState f [] of
+  case fst $ runWriter f of
     BinOp f1 op f2       -> BinOp (forgetFC f1) op (forgetFC f2)
     InfixPred t1 pred_ t2 -> InfixPred (forgetTC t1) pred_ (forgetTC t2)
     PredApp aw ts        -> PredApp aw (fmap forgetTC ts)
@@ -58,7 +58,7 @@ forgetFC (F f) = F . return $
 -- | Forget comments in terms decorated with comments
 forgetTC :: TermC -> Term
 forgetTC (T t) = T . return $
-  case evalState t [] of
+  case fst $ runWriter t of
     Var v -> Var v
     NumberLitTerm d -> NumberLitTerm d
     DistinctObjectTerm s -> DistinctObjectTerm s
@@ -216,8 +216,8 @@ type TPTP_Input = TPTP_Input_ Identity
     deriving (Eq,Ord,Show,Read,Data,Typeable)
 -}
 
--- | A line of a TPTP file: Annotated formula (with the comment string embbeded in the State monad ), comment or include statement
-type TPTP_Input_C = TPTP_Input_ (State [String])
+-- | A line of a TPTP file: Annotated formula (with the comment string embbeded in the Writer monad ), comment or include statement
+type TPTP_Input_C = TPTP_Input_ (Writer [String])
 
 -- | Forget comments in a line of a TPTP file decorated with comments
 forgetTIC :: TPTP_Input_C -> TPTP_Input

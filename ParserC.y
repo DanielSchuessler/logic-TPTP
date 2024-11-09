@@ -12,7 +12,7 @@ import Codec.TPTP.Base
 import System.IO
 import System.IO.Unsafe
 import Control.Monad.Identity
-import Control.Monad.State
+import Control.Monad.Writer
 }
 
 %name parseTPTPwithComment
@@ -505,8 +505,8 @@ class Commented c where
 instance Commented Identity where
   withComments = const
 
-instance Commented (State [String]) where
-  withComments (F mf) s = F $ do { f <- mf; put s; return f }
+instance Commented (Writer [String]) where
+  withComments (F mf) s = F $ do { f <- mf; tell s; return f }
 
 
 stripQuotes which (x:xs) = go xs
