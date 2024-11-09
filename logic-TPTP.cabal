@@ -1,5 +1,5 @@
 name: logic-TPTP
-version: 0.5.1.0
+version: 0.6.0.0
 cabal-version: >= 1.10
 build-type: Simple
 license: GPL
@@ -64,7 +64,9 @@ Library
                    , array
                    , syb
                    , containers
-                   , ansi-wl-pprint < 1.0
+                   , prettyprinter >=1.2.1.1 && <1.8
+                   , prettyprinter-ansi-terminal >=1.0 && <1.2
+                   , text
                    , QuickCheck >= 2
                    , mtl
                    , pointed
@@ -96,7 +98,8 @@ Executable TestImportExportImportFile
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , base
-                  , ansi-wl-pprint
+                  , prettyprinter
+                  , prettyprinter-ansi-terminal
                   , optparse-applicative >=0.11 && <0.19
                   , pcre-light
                   , semigroups
@@ -112,7 +115,8 @@ Test-suite TestImportExportRandom
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
                   , base
-                  , ansi-wl-pprint
+                  , prettyprinter
+                  , prettyprinter-ansi-terminal
                   , pcre-light
                   , QuickCheck
                   , semigroups
@@ -126,7 +130,8 @@ Executable PrettyPrintFile
                   , SimpleArgs
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
-                  , ansi-wl-pprint
+                  , prettyprinter
+                  , prettyprinter-ansi-terminal
                   , base
                   , bytestring
                   , containers
@@ -147,7 +152,8 @@ Executable ParseRandom
                   , SimpleArgs
  hs-source-dirs:    testing
  build-depends:     logic-TPTP
-                  , ansi-wl-pprint
+                  , prettyprinter
+                  , prettyprinter-ansi-terminal
                   , base
                   , bytestring
                   , containers

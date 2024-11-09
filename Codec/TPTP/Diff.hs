@@ -17,11 +17,14 @@ import Data.Generics
 import Test.QuickCheck hiding((.&.))
 import Codec.TPTP.Base
 import Codec.TPTP.Pretty
-import Text.PrettyPrint.ANSI.Leijen
+import Prettyprinter
+import Prettyprinter.Render.Terminal
 import Control.Monad
 import Control.Monad.Identity
 
 
+text :: String -> Doc ann
+text = pretty
 
 
 data DiffResult d =
@@ -208,55 +211,55 @@ type F0Diff = DiffResult (Formula0 (T DiffResult) (F DiffResult))
 wildcard :: AtomicWord
 wildcard = "_"
 
-instance Pretty (WithEnclosing T0Diff) where
-    pretty = prettyHelper --(plugSubterms (fApp wildcard []))
+instance PrettyAnsi (WithEnclosing T0Diff) where
+    prettyAnsi = prettyHelper --(plugSubterms (fApp wildcard []))
 
-instance Pretty (WithEnclosing F0Diff) where
-    pretty = prettyHelper --(plugSubformulae (fApp wildcard []) (pApp wildcard []))
+instance PrettyAnsi (WithEnclosing F0Diff) where
+    prettyAnsi = prettyHelper --(plugSubformulae (fApp wildcard []) (pApp wildcard []))
 
 prettyHelper :: forall t.
-                (Pretty (WithEnclosing t)) =>
-                WithEnclosing (DiffResult t) -> Doc
+                (PrettyAnsi (WithEnclosing t)) =>
+                WithEnclosing (DiffResult t) -> Doc AnsiStyle
 prettyHelper (WithEnclosing _ d) =
         let
-            pwe = pretty . WithEnclosing EnclNothing
+            pwe = prettyAnsi . WithEnclosing EnclNothing
         in
           case d of
-                 DontCare -> dullwhite.pretty $ wildcard
-                 Same -> dullgreen.text $ "Same"
-                 SameHead x -> blue . encloseSep (text "{ SameHead ") (text "}") semi $
+                 DontCare -> annotate (colorDull White).pretty $ wildcard
+                 Same -> annotate (colorDull Green).text $ "Same"
+                 SameHead x -> annotate (color Blue) . encloseSep (text "{ SameHead ") (text "}") semi $
                               [  pwe x
                               ]
 
 
 
-                 Differ x y -> red . encloseSep (text "{ Differ ") rbrace (text "; ") $
+                 Differ x y -> annotate (color Red) . encloseSep (text "{ Differ ") rbrace (text "; ") $
 
                               [ pwe x
                               , pwe y
                               ]
 
-deriving instance Pretty (T DiffResult)
+deriving instance PrettyAnsi (T DiffResult)
 
-deriving instance Pretty (F DiffResult)
+deriving instance PrettyAnsi (F DiffResult)
 
-instance Pretty (WithEnclosing (T DiffResult)) where
-    pretty (WithEnclosing x (T y)) = pretty (WithEnclosing x y)
+instance PrettyAnsi (WithEnclosing (T DiffResult)) where
+    prettyAnsi (WithEnclosing x (T y)) = prettyAnsi (WithEnclosing x y)
 
-instance Pretty (WithEnclosing (F DiffResult)) where
-    pretty (WithEnclosing x (F y)) = pretty (WithEnclosing x y)
+instance PrettyAnsi (WithEnclosing (F DiffResult)) where
+    prettyAnsi (WithEnclosing x (F y)) = prettyAnsi (WithEnclosing x y)
 
-instance Pretty (T0Diff) where
-    pretty = pretty . WithEnclosing EnclNothing
+instance PrettyAnsi (T0Diff) where
+    prettyAnsi = prettyAnsi . WithEnclosing EnclNothing
 
-instance Pretty (F0Diff) where
-    pretty = pretty . WithEnclosing EnclNothing
+instance PrettyAnsi (F0Diff) where
+    prettyAnsi = prettyAnsi . WithEnclosing EnclNothing
 
--- instance Pretty (DiffResult (T DiffResult)) where
---     pretty = pretty . WithEnclosing EnclNothing . T
+-- instance PrettyAnsi (DiffResult (T DiffResult)) where
+--     prettyAnsi = prettyAnsi . WithEnclosing EnclNothing . T
 
--- instance Pretty (DiffResult (T DiffResult) (F DiffResult)) where
---     pretty = pretty . WithEnclosing EnclNothing . F
+-- instance PrettyAnsi (DiffResult (T DiffResult) (F DiffResult)) where
+--     prettyAnsi = prettyAnsi . WithEnclosing EnclNothing . F
 
 
 -- runFormulaDiff :: Formula
@@ -298,12 +301,14 @@ printSampleDiffs = do
   xs <- sample' diffGenF
   ys <- sample' diffGenF
 
-  let item x y = text (replicate 50 '=')
-                 <$> pretty x
-                 <$> text (replicate 40 '-')
-                 <$> pretty y
-                 <$> text (replicate 40 '-')
-                 <$> pretty (diffFormula x y)
+  let item x y = vsep
+                 [ text (replicate 50 '=')
+                 , prettyAnsi x
+                 , text (replicate 40 '-')
+                 , prettyAnsi y
+                 , text (replicate 40 '-')
+                 , prettyAnsi (diffFormula x y)
+                 ]
 
   mapM_ (putStrLn . prettySimple . uncurry item) (zip xs ys)
 
